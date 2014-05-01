@@ -161,10 +161,8 @@ def run_mgtool (tool, project, dbname):
     print "Running MetricsGrimoire tool (" + tool + ")" 
     # Run the tool
     env = os.environ.copy()
-    if "PYTHONPATH" in env:
-        env ["PYTHONPATH"] = env ["PYTHONPATH"] + ":" + mgConf[tool]["ppath"]
-    else:
-        env ["PYTHONPATH"] = mgConf[tool]["ppath"]
+    env ["PYTHONPATH"] = mgConf[tool]["ppath"] + ":" + \
+        os.environ.get("PYTHONPATH", "")
     if args.verbose:
         print "PYTHONPATH: " + env ["PYTHONPATH"]
         print "Running: " + " ".join(opts)
@@ -223,7 +221,7 @@ def install_vizgrimoirer (libdir, vizgrimoirer_pkgdir):
     env ["R_LIBS"] = libdir
     call (["R", "CMD", "INSTALL", vizgrimoirer_pkgdir], env=env)
 
-def install_rdependencies (libdir, vizgrimoirer_pkgdir):
+def install_rdepend (libdir, vizgrimoirer_pkgdir):
     """Install R dependencies in a specific location
 
     - libdir: directory to install R libraries
@@ -264,6 +262,18 @@ def install_rdependencies (libdir, vizgrimoirer_pkgdir):
     p = Popen(["R", "--vanilla"], stdin=PIPE)
     p.communicate(rcode)
 
+def install_pdepend (libdir, libs):
+    """Install R dependencies in a specific location
+
+    - libdir: directory to install Python libraries
+
+    Installing Python dependencies, using pip
+
+    """
+
+    for lib in libs:
+        call (["pip", "install", "--target=" + libdir, lib])
+
 def unique_ids (dbprefix):
     """Run unique identities stuff
 
@@ -271,9 +281,9 @@ def unique_ids (dbprefix):
 
     """
 
-    call ([rConf["unifypeople"], "-d", dbprefix + "_" + "cvsanaly",
+    call ([vguConf["unifypeople"], "-d", dbprefix + "_" + "cvsanaly",
            "-u", args.user, "-p", args.passwd, "-i", "no"])
-    call ([rConf["ds2id"],
+    call ([vguConf["ds2id"],
            "--data-source=its",
            "--db-name-ds=" + dbprefix + "_" + "bicho",
            "--db-name-ids=" + dbprefix + "_" + "cvsanaly",
@@ -286,7 +296,7 @@ def affiliation (dbprefix):
 
     """
 
-    call ([rConf["domains"], "-d", dbprefix + "_" + "cvsanaly",
+    call ([vguConf["domains"], "-d", dbprefix + "_" + "cvsanaly",
            "-u", args.user, "-p", args.passwd])
 
 
@@ -313,16 +323,21 @@ def run_analysis (scripts, base_dbs, id_dbs, outdir):
         else: 
             raise
     # Run the analysis scripts
-    os.environ["R_LIBS"] = rConf["libdir"] + ":" + os.environ.get("R_LIBS", "")
+    env = os.environ.copy()
+    env["R_LIBS"] = rConf["libdir"] + ":" + os.environ.get("R_LIBS", "")
+    env["PYTHONPATH"] = glConf["libdir"] + ":" + \
+        pythonConf["libdir"] + ":" + \
+        os.environ.get("PYTHONPATH", "")
+    env["LANG"] = ""
     for script, base_db, id_db in zip (scripts, base_dbs, id_dbs):
         call_list = [script, "-d", base_db,
-                     "-u", args.user, "-p", args.passwd,
+                     "--dbuser", args.user, "--dbpassword", args.passwd,
                      "-i", id_db,
                      "--granularity", "weeks",
                      "--destination", outdir]
         if args.verbose:
-            print " ".join (call_list)
-        call (call_list)
+            print "Running: " + " ".join (call_list)
+        call (call_list, env=env)
 
 def produce_config (config_template, config_file):
     """Produce a config.json file by translating a template file.
@@ -428,6 +443,9 @@ misc/metricsgrimoire-setup.py""")
         parser.add_argument("--nordep",
                             help="Don't install R dependencies",
                             action="store_true")
+        parser.add_argument("--nopythondep",
+                            help="Don't install Python dependencies",
+                            action="store_true")
         parser.add_argument("--noanalysis",
                             help="Don't run vizGrimoireR analysis",
                             action="store_true")
@@ -459,6 +477,10 @@ misc/metricsgrimoire-setup.py""")
     else:
         dir = "/tmp"
 
+    # Directory for this script
+    my_dir = os.path.dirname(os.path.realpath(__file__))
+    # GrimoireLib directory is two levels up
+    gl_dir = os.path.split(os.path.split(my_dir)[0])[0]
     # Root directory for the dashboard
     dashboard_dir = dir + "/dashboard"
     # JSON directory for browser
@@ -469,18 +491,24 @@ misc/metricsgrimoire-setup.py""")
 
     # Configure R paths
     rConf = {"libdir": dir + "/rlib",
-             "vgrpkg": args.vgdir + "/VizGrimoireR/vizgrimoire",
-             "scm-analysis": args.vgdir + \
-                 "/VizGrimoireR/examples/github/scm-analysis-github.R",
-             "its-analysis": args.vgdir + \
-                 "/VizGrimoireR/examples/github/its-analysis-github.R",
-             "unifypeople": args.vgdir + \
-                 "/VizGrimoireUtils/identities/unifypeople.py",
-             "ds2id": args.vgdir + \
-                 "/VizGrimoireUtils/identities/datasource2identities.py",
-             "domains": args.vgdir + \
-                 "/VizGrimoireUtils/identities/domains_analysis.py"
+             "vgrpkg": os.path.join(gl_dir, "vizgrimoire"),
              }
+    # Configure Python (paths, dependencies)
+    pythonConf = {"libdir": dir + "/pythonlib",
+                  "libs": ["rpy2"]}
+    # Configure GrimoireLib paths
+    glConf = {"libdir": os.path.join(gl_dir, "vizgrimoire"),
+              "scm-analysis": os.path.join(my_dir, "scm-analysis.py"),
+              "its-analysis": os.path.join(my_dir, "its-analysis.py"),
+              }
+    # Configure vizGrimoireUtils paths
+    vguConf = {"unifypeople": args.vgdir + \
+                   "/VizGrimoireUtils/identities/unifypeople.py",
+               "ds2id": args.vgdir + \
+                   "/VizGrimoireUtils/identities/datasource2identities.py",
+               "domains": args.vgdir + \
+                   "/VizGrimoireUtils/identities/domains_analysis.py"
+               }
     # Now, if there is no --nomg flag, run MetricsGrimoire tools
     # If it is for a github user, get all the projects under the user name,
     # and run tools on each of them.
@@ -522,13 +550,16 @@ misc/metricsgrimoire-setup.py""")
         create_rlib (rConf["libdir"])
 
     if not args.noinstvgr and not args.nordep:
-        install_rdependencies (rConf["libdir"], rConf["vgrpkg"])
+        install_rdepend (rConf["libdir"], rConf["vgrpkg"])
+
+    if not args.nopythondep:
+        install_pdepend (pythonConf["libdir"], pythonConf["libs"])
 
     if not args.noinstvgr:
         install_vizgrimoirer (rConf["libdir"], rConf["vgrpkg"])
 
     if not args.noanalysis:
-        run_analysis ([rConf["scm-analysis"], rConf["its-analysis"]],
+        run_analysis ([glConf["scm-analysis"], glConf["its-analysis"]],
                       [dbPrefix + "_" + "cvsanaly", dbPrefix + "_" + "bicho"],
                       [dbPrefix + "_" + "cvsanaly", dbPrefix + "_" + "cvsanaly"],
                       JSONdir)
