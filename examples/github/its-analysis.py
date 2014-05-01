@@ -208,15 +208,15 @@ def topData(period, startdate, enddate, identities_db, destdir, bots, closed_con
     # Top closers
     top_closers_data = {}
     # top_closers_data['closers.']=dataFrame2Dict(vizr.GetTopClosers(0, startdate, enddate,identities_db, bots, closed_condition))
-    top_closers_data['closers.']=ITS.GetTopClosers(0, startdate, enddate,identities_db, bots, closed_condition, npeople)
-    top_closers_data['closers.last year']=ITS.GetTopClosers(365, startdate, enddate,identities_db, bots, closed_condition, npeople)
-    top_closers_data['closers.last month']=ITS.GetTopClosers(31, startdate, enddate,identities_db, bots, closed_condition, npeople)
+    top_closers_data['closers.']=ITS.GetTopClosers(0, startdate, enddate,identities_db, None, closed_condition, npeople)
+    top_closers_data['closers.last year']=ITS.GetTopClosers(365, startdate, enddate,identities_db, None, closed_condition, npeople)
+    top_closers_data['closers.last month']=ITS.GetTopClosers(31, startdate, enddate,identities_db, None, closed_condition, npeople)
 
     # Top openers
     top_openers_data = {}
-    top_openers_data['openers.']=ITS.GetTopOpeners(0, startdate, enddate,identities_db, bots, closed_condition, npeople)
-    top_openers_data['openers.last year']=ITS.GetTopOpeners(365, startdate, enddate,identities_db, bots, closed_condition, npeople)
-    top_openers_data['openers.last month']=ITS.GetTopOpeners(31, startdate, enddate,identities_db, bots, closed_condition, npeople)
+    top_openers_data['openers.']=ITS.GetTopOpeners(0, startdate, enddate,identities_db, None, closed_condition, npeople)
+    top_openers_data['openers.last year']=ITS.GetTopOpeners(365, startdate, enddate,identities_db, None, closed_condition, npeople)
+    top_openers_data['openers.last month']=ITS.GetTopOpeners(31, startdate, enddate,identities_db, None, closed_condition, npeople)
 
 
     all_top = dict(top_closers_data.items() + top_openers_data.items())
@@ -236,7 +236,7 @@ def microStudies(vizr, destdir):
     vizr.ReportDemographicsBirthITS(opts.enddate, opts.destdir, unique_ids)
 
     # Markov
-    vizr.ReportMarkovChain(opts.destdir)
+    # vizr.ReportMarkovChain(opts.destdir)
 
 def ticketsStates(period, startdate, enddate, identities_db, backend):
     evol = {}

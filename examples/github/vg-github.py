@@ -519,20 +519,23 @@ misc/metricsgrimoire-setup.py""")
         mgConf["dir"] = args.dir + "/mg"
         mgConf["tools"] = ["cvsanaly", "repohandler", "bicho"]
         mgConf["bintools"] = ["cvsanaly", "bicho"]
-        mgConf["repohandler"] = {"repo": mgConf["repo"] + "RepositoryHandler",
-                                 "dir": mgConf["dir"] + "RepositoryHandler"
-                                 }
-        mgConf["cvsanaly"] = {"repo": mgConf["repo"] + "/CVSAnalY",
-                              "dir": mgConf["dir"] + "/CVSAnalY",
-                              "bin": mgConf["dir"] + "/CVSAnalY/cvsanaly2",
-                              "ppath": mgConf["repohandler"]["dir"] + \
-                                  ":" + mgConf["dir"] + "/CVSAnalY",
-                              }
-        mgConf["bicho"] = {"repo": mgConf["repo"] + "/Bicho",
-                           "dir": mgConf["dir"] + "/Bicho",
-                           "bin": mgConf["dir"] + "/Bicho/bin/bicho",
-                           "ppath": mgConf["dir"] + "/Bicho"
-                           }
+        mgConf["repohandler"] = {
+            "repo": mgConf["repo"] + "RepositoryHandler",
+            "dir": os.path.join(mgConf["dir"], "RepositoryHandler")
+            }
+        mgConf["cvsanaly"] = {
+            "repo": mgConf["repo"] + "CVSAnalY",
+            "dir": os.path.join(mgConf["dir"], "CVSAnalY"),
+            "bin": os.path.join(mgConf["dir"], "CVSAnalY/cvsanaly2"),
+            "ppath": mgConf["repohandler"]["dir"] + \
+                ":" + os.path.join(mgConf["dir"], "CVSAnalY"),
+            }
+        mgConf["bicho"] = {
+            "repo": mgConf["repo"] + "Bicho",
+            "dir": os.path.join(mgConf["dir"], "Bicho"),
+            "bin": os.path.join(mgConf["dir"], "Bicho/bin/bicho"),
+            "ppath": os.path.join(mgConf["dir"], "Bicho")
+            }
         install_mgtools (mgConf["tools"])
         if args.isuser:
             repos = find_repos (args.name)
