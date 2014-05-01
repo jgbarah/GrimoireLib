@@ -59,6 +59,8 @@ bichoConf = {"bin": "bicho",
 conf = {"cvsanaly": cvsanalyConf,
         "bicho":    bichoConf}
 
+mgConf = {}
+
 rConf = {}
 args = None
 dbPrefix = ""
@@ -103,6 +105,25 @@ def find_repos (user):
     repo_names = [repo['full_name'] for repo in repos]
     return (repo_names)
 
+def install_mgtools (tools):
+    """Install MetricsGrimoire tools by cloning from git repositories.
+
+    - tools: list of tools to install
+    """
+    
+    dir = mgConf["dir"]
+    # Create and move to the installation directory
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+        
+    for tool in tools:
+        dir_tool = mgConf[tool]["dir"]
+        if not os.path.exists(dir_tool):
+            call(["git", "clone", mgConf[tool]["repo"], dir_tool])
+        else:
+            call(["git", "--git-dir=" + dir_tool + "/.git", "pull"])
+
+
 def run_mgtool (tool, project, dbname):
     """Run MetricsGrimoire tool
 
@@ -115,7 +136,7 @@ def run_mgtool (tool, project, dbname):
     """
 
     # Prepare options to run the tool
-    opts = [conf[tool]["bin"]]
+    opts = [mgConf[tool]["bin"]]
     opts.extend (conf[tool]["opts"])
     if args.user:
         opts.extend ([conf[tool]["dbuser"], args.user])
@@ -126,9 +147,9 @@ def run_mgtool (tool, project, dbname):
     if tool == "cvsanaly":
         gitdir = project.split('/', 1)[1]
         call(["git", "clone", "https://github.com/" + project + ".git",
-              dir + '/' + gitdir])
+              dir + '/repos/' + gitdir])
         opts.append ("--extensions=" + "CommitsLOC")
-        opts.append (dir + '/' + gitdir)
+        opts.append (dir + '/repos/' + gitdir)
         if not args.verbose:
              opts.append ("--quiet")
     # Specific code for running bicho
@@ -138,17 +159,24 @@ def run_mgtool (tool, project, dbname):
                       "--backend-user", args.ghuser,
                       "--backend-password", args.ghpasswd])
     print "Running MetricsGrimoire tool (" + tool + ")" 
-    if args.verbose:
-        print " ".join(opts)
     # Run the tool
-    call(opts)
+    env = os.environ.copy()
+    if "PYTHONPATH" in env:
+        env ["PYTHONPATH"] = env ["PYTHONPATH"] + ":" + mgConf[tool]["ppath"]
+    else:
+        env ["PYTHONPATH"] = mgConf[tool]["ppath"]
+    if args.verbose:
+        print "PYTHONPATH: " + env ["PYTHONPATH"]
+        print "Running: " + " ".join(opts)
+    call(opts, env=env)
+
 
 def run_mgtools (tools, projects, dbprefix):
     """Run MetricsGrimoire tools
 
     - tools: [cvsanaly, bicho, ...] (list)
     - project: GitHub project, such as VizGrimoire/VizGrimoireR
-    - dbname: name of the database
+    - dbprefix: prefix for the name of the database
 
     Run the specified MetricsGRimoire tools, preparing their
     corresponding databases if needed
@@ -436,6 +464,9 @@ misc/metricsgrimoire-setup.py""")
     # JSON directory for browser
     JSONdir = dashboard_dir + "/data/json"
 
+    # Configuration for MetricsGrimoire
+    mgConf = {}
+
     # Configure R paths
     rConf = {"libdir": dir + "/rlib",
              "vgrpkg": args.vgdir + "/VizGrimoireR/vizgrimoire",
@@ -455,12 +486,31 @@ misc/metricsgrimoire-setup.py""")
     # and run tools on each of them.
     # If it is for a single project, just run the tools on it
     if not args.nomg:
+        # Location of MetricsGrimoire repositories
+        mgConf["repo"] = "https://github.com/MetricsGrimoire/"
+        mgConf["dir"] = args.dir + "/mg"
+        mgConf["tools"] = ["cvsanaly", "repohandler", "bicho"]
+        mgConf["bintools"] = ["cvsanaly", "bicho"]
+        mgConf["repohandler"] = {"repo": mgConf["repo"] + "RepositoryHandler",
+                                 "dir": mgConf["dir"] + "RepositoryHandler"
+                                 }
+        mgConf["cvsanaly"] = {"repo": mgConf["repo"] + "/CVSAnalY",
+                              "dir": mgConf["dir"] + "/CVSAnalY",
+                              "bin": mgConf["dir"] + "/CVSAnalY/cvsanaly2",
+                              "ppath": mgConf["repohandler"]["dir"] + \
+                                  ":" + mgConf["dir"] + "/CVSAnalY",
+                              }
+        mgConf["bicho"] = {"repo": mgConf["repo"] + "/Bicho",
+                           "dir": mgConf["dir"] + "/Bicho",
+                           "bin": mgConf["dir"] + "/Bicho/bin/bicho",
+                           "ppath": mgConf["dir"] + "/Bicho"
+                           }
+        install_mgtools (mgConf["tools"])
         if args.isuser:
             repos = find_repos (args.name)
         else:
             repos = [args.name]
         run_mgtools (["cvsanaly", "bicho"], repos, dbPrefix)
-
     # Run unique_ids and affiliation (people stuff)
     # except that --nopeople was specified
     if not args.nopeople:
