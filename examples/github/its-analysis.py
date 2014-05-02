@@ -266,13 +266,16 @@ if __name__ == '__main__':
     # filtered bots
     bots = ['-Bot']
 
-    # TODO: hack because VizR library needs. Fix in lib in future
-    startdate = "'"+opts.startdate+"'"
-    enddate = "'"+opts.enddate+"'"
-
     # Working at the same time with VizR and VizPy yet
     vizr.SetDBChannel (database=opts.dbname, user=opts.dbuser, password=opts.dbpassword)
     GrimoireSQL.SetDBChannel (database=opts.dbname, user=opts.dbuser, password=opts.dbpassword)
+
+    (startdate, enddate) = ITS.get_timespan()
+    # TODO: hack because VizR library needs. Fix in lib in future
+    startdate_str = startdate.strftime('%Y-%m-%d')
+    enddate_str = enddate.strftime('%Y-%m-%d')
+    startdate = "'"+startdate_str+"'"
+    enddate = "'"+enddate_str+"'"
 
     # backends
     backend = Backend(opts.backend)
