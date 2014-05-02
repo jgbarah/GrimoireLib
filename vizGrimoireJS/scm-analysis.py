@@ -202,6 +202,7 @@ def microStudies(vizr, enddate, destdir):
     vizr.ReportDemographicsBirthSCM(enddate, destdir, unique_ids)
 
 if __name__ == '__main__':
+
     logging.basicConfig(level=logging.INFO,format='%(asctime)s %(message)s')
     logging.info("Starting SCM data source analysis")
     opts = read_options()
@@ -209,15 +210,18 @@ if __name__ == '__main__':
     nperiod = getPeriod(opts.granularity, True)
     reports = opts.reports.split(",")
     # filtered bots
-
     bots = ["-Bot", "-Individual", "-Unknown"]
-    # TODO: hack because VizR library needs. Fix in lib in future
-    startdate = "'"+opts.startdate+"'"
-    enddate = "'"+opts.enddate+"'"
 
     # Working at the same time with VizR and VizPy yet
     vizr.SetDBChannel (database=opts.dbname, user=opts.dbuser, password=opts.dbpassword)
     GrimoireSQL.SetDBChannel (database=opts.dbname, user=opts.dbuser, password=opts.dbpassword)
+
+    (startdate, enddate) = SCM.get_timespan()
+    # TODO: hack because VizR library needs. Fix in lib in future
+    startdate_str = startdate.strftime('%Y-%m-%d')
+    enddate_str = enddate.strftime('%Y-%m-%d')
+    startdate = "'"+startdate_str+"'"
+    enddate = "'"+enddate_str+"'"
 
     aggData(period, startdate, enddate, opts.identities_db, opts.destdir)
     tsData (period, startdate, enddate, opts.identities_db, opts.destdir, opts.granularity, opts)
