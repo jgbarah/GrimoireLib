@@ -112,7 +112,7 @@ def install_mgtools (tools):
     """
     
     dir = mgConf["dir"]
-    # Create and move to the installation directory
+    # Create the installation directory
     if not os.path.exists(dir):
         os.makedirs(dir)
         
@@ -136,14 +136,17 @@ def run_mgtool (tool, project, dbname):
     """
 
     # Prepare options to run the tool
-    opts = [mgConf[tool]["bin"]]
+    tool_bin = os.path.join(mgConf["dir"],
+                            mgConf[tool]["dir"],
+                            mgConf[tool]["bin"])
+    opts = [tool_bin]
     opts.extend (conf[tool]["opts"])
     if args.user:
         opts.extend ([conf[tool]["dbuser"], args.user])
     if args.passwd:
         opts.extend ([conf[tool]["dbpasswd"], args.passwd])
     opts.extend ([conf[tool]["db"], dbname])
-    # Specific code for runnint cvsanaly
+    # Specific code for running cvsanaly
     if tool == "cvsanaly":
         gitdir = project.split('/', 1)[1]
         call(["git", "clone", "https://github.com/" + project + ".git",
@@ -203,8 +206,42 @@ def create_rlib (libdir):
         else: 
             raise
 
+def install_from_git (dir, pkgs, conf):
+    """Install some source packages from their git repos.
+
+    Just clone the repos if corresponding subdirectories don't exist,
+    or pull from them if they exist.
+    For each pkg, a corresponding entry in conf must exist. That entry
+    should be a dictionary, with at lease two entries:
+    - "dir": the subdirectory name for installation
+    - "repo": the url of the git repository
+
+    Parameters
+    ----------
+    dir : string
+        Path of directory to install vizGrimoire packages as subdirectories
+    pkgs: sequence of strings
+        List of packages to install
+    conf: dictionay
+        Keys are pkg names, values are dictionaries (see description above)
+
+    Returns
+    -------
+    None
+
+    """
+
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+    for pkg in pkgs:
+        dir_pkg = os.path.join(dir, conf[pkg]["dir"])
+        if not os.path.exists(dir_pkg):
+            call(["git", "clone", conf[pkg]["repo"], dir_pkg])
+        else:
+            call(["git", "--git-dir=" + dir_pkg + "/.git", "pull"])
+
 def install_vizgrimoirer (libdir, vizgrimoirer_pkgdir):
-    """Install the appropriate vizgrimorer R package in a specific location
+    """Install the appropriate vizgrimore R package in a specific location
 
     - libdir: directory to install R libraries
     - vizgrimoirer_pkgdir: directory with the source code for the
@@ -281,9 +318,17 @@ def unique_ids (dbprefix):
 
     """
 
-    call ([vguConf["unifypeople"], "-d", dbprefix + "_" + "cvsanaly",
+    print os.path.join(vgConf["dir"],
+                        vgConf["vizGrimoireUtils"]["dir"],
+                        vguConf["unifypeople"])
+    call ([os.path.join(vgConf["dir"],
+                        vgConf["vizGrimoireUtils"]["dir"],
+                        vguConf["unifypeople"]),
+           "-d", dbprefix + "_" + "cvsanaly",
            "-u", args.user, "-p", args.passwd, "-i", "no"])
-    call ([vguConf["ds2id"],
+    call ([os.path.join(vgConf["dir"],
+                        vgConf["vizGrimoireUtils"]["dir"],
+                        vguConf["ds2id"]),
            "--data-source=its",
            "--db-name-ds=" + dbprefix + "_" + "bicho",
            "--db-name-ids=" + dbprefix + "_" + "cvsanaly",
@@ -296,7 +341,10 @@ def affiliation (dbprefix):
 
     """
 
-    call ([vguConf["domains"], "-d", dbprefix + "_" + "cvsanaly",
+    call ([os.path.join(vgConf["dir"],
+                        vgConf["vizGrimoireUtils"]["dir"],
+                        vguConf["domains"]),
+           "-d", dbprefix + "_" + "cvsanaly",
            "-u", args.user, "-p", args.passwd])
 
 
@@ -437,6 +485,9 @@ misc/metricsgrimoire-setup.py""")
         parser.add_argument("--nopeople",
                             help="Don't run people stuff (unique ids, affiliation)",
                             action="store_true")
+        parser.add_argument("--noinstvg",
+                            help="Don't install vizGrimoire packages from repos",
+                            action="store_true")
         parser.add_argument("--noinstvgr",
                             help="Don't install vizgrimoire R package",
                             action="store_true")
@@ -501,13 +552,23 @@ misc/metricsgrimoire-setup.py""")
               "scm-analysis": os.path.join(my_dir, "scm-analysis.py"),
               "its-analysis": os.path.join(my_dir, "its-analysis.py"),
               }
+    # Configuration for other vizGrimoire packages
+    vgConf = {"pkgs": ["vizGrimoireUtils", "vizGrimoireJS"],
+              "dir": os.path.join(args.dir, "vizGrimoire")
+              }
+    vgConf["vizGrimoireUtils"] = {
+        "dir": "vizGrimoireUtils",
+        "repo": "https://github.com/VizGrimoire/VizGrimoireUtils.git"
+        }
+    vgConf["vizGrimoireJS"] = {
+        "dir": "vizGrimoireJS",
+        "repo": "https://github.com/VizGrimoire/VizGrimoireJS.git"
+        }
+            
     # Configure vizGrimoireUtils paths
-    vguConf = {"unifypeople": args.vgdir + \
-                   "/VizGrimoireUtils/identities/unifypeople.py",
-               "ds2id": args.vgdir + \
-                   "/VizGrimoireUtils/identities/datasource2identities.py",
-               "domains": args.vgdir + \
-                   "/VizGrimoireUtils/identities/domains_analysis.py"
+    vguConf = {"unifypeople": os.path.join("identities", "unifypeople.py"),
+               "ds2id": os.path.join("identities", "datasource2identities.py"),
+               "domains": os.path.join("identities", "domains_analysis.py")
                }
     # Now, if there is no --nomg flag, run MetricsGrimoire tools
     # If it is for a github user, get all the projects under the user name,
@@ -516,7 +577,7 @@ misc/metricsgrimoire-setup.py""")
     if not args.nomg:
         # Location of MetricsGrimoire repositories
         mgConf["repo"] = "https://github.com/MetricsGrimoire/"
-        mgConf["dir"] = args.dir + "/mg"
+        mgConf["dir"] = os.path.join(args.dir, "mg")
         mgConf["tools"] = ["cvsanaly", "repohandler", "bicho"]
         mgConf["bintools"] = ["cvsanaly", "bicho"]
         mgConf["repohandler"] = {
@@ -525,41 +586,49 @@ misc/metricsgrimoire-setup.py""")
             }
         mgConf["cvsanaly"] = {
             "repo": mgConf["repo"] + "CVSAnalY",
-            "dir": os.path.join(mgConf["dir"], "CVSAnalY"),
-            "bin": os.path.join(mgConf["dir"], "CVSAnalY/cvsanaly2"),
-            "ppath": mgConf["repohandler"]["dir"] + \
-                ":" + os.path.join(mgConf["dir"], "CVSAnalY"),
+            "dir": "CVSAnalY",
+            "bin": os.path.join(mgConf["dir"], "CVSAnalY", "cvsanaly2")
             }
+        mgConf["cvsanaly"]["ppath"] = mgConf["repohandler"]["dir"] + \
+            ":" + os.path.join(mgConf["dir"], mgConf["cvsanaly"]["dir"])
         mgConf["bicho"] = {
             "repo": mgConf["repo"] + "Bicho",
-            "dir": os.path.join(mgConf["dir"], "Bicho"),
-            "bin": os.path.join(mgConf["dir"], "Bicho/bin/bicho"),
-            "ppath": os.path.join(mgConf["dir"], "Bicho")
+            "dir": "Bicho",
+            "bin": os.path.join("bin", "bicho")
             }
-        install_mgtools (mgConf["tools"])
+        mgConf["bicho"]["ppath"] = os.path.join(mgConf["dir"],
+                                                mgConf["bicho"]["dir"])
+        install_from_git (mgConf["dir"], mgConf["tools"], mgConf)
         if args.isuser:
             repos = find_repos (args.name)
         else:
             repos = [args.name]
         run_mgtools (["cvsanaly", "bicho"], repos, dbPrefix)
+
+    # Install vizGrinmoire packages needed, from their git repos
+    if not args.noinstvg:
+        install_from_git (vgConf["dir"],
+                          ["vizGrimoireJS", "vizGrimoireUtils"],
+                          vgConf)
+
     # Run unique_ids and affiliation (people stuff)
     # except that --nopeople was specified
     if not args.nopeople:
         unique_ids (dbPrefix)
         affiliation (dbPrefix)
 
-    # Install vizgrimoire R package, just in case
+    # Install vizgrimoire R package and its R dependencies, just in case
     if not args.noinstvgr:
         create_rlib (rConf["libdir"])
-
     if not args.noinstvgr and not args.nordep:
         install_rdepend (rConf["libdir"], rConf["vgrpkg"])
+    if not args.noinstvgr:
+        install_vizgrimoirer (rConf["libdir"], rConf["vgrpkg"])
 
+    # Install Python dependencies
     if not args.nopythondep:
         install_pdepend (pythonConf["libdir"], pythonConf["libs"])
 
-    if not args.noinstvgr:
-        install_vizgrimoirer (rConf["libdir"], rConf["vgrpkg"])
 
     if not args.noanalysis:
         run_analysis ([glConf["scm-analysis"], glConf["its-analysis"]],
@@ -568,6 +637,9 @@ misc/metricsgrimoire-setup.py""")
                       JSONdir)
 
     if not args.nobrowser:
-        produce_dashboard (vizgrimoirejs_dir = args.vgdir + "/VizGrimoireJS",
-                           example_dir = args.vgdir + "/VizGrimoireR/examples/github",
-                           dashboard_dir = dashboard_dir, json_dir = JSONdir)
+        produce_dashboard (vizgrimoirejs_dir = \
+                               os.path.join(vgConf["dir"],
+                                            vgConf["vizGrimoireJS"]["dir"]),
+                           example_dir = my_dir,
+                           dashboard_dir = dashboard_dir,
+                           json_dir = JSONdir)
