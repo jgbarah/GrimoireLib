@@ -102,20 +102,9 @@ def _prepare_db (tool, name, user, passwd, remove = True):
             cursor.execute('DROP DATABASE IF EXISTS ' + name)
         cursor.execute('CREATE DATABASE IF NOT EXISTS ' + name +
                        ' CHARACTER SET utf8 COLLATE utf8_unicode_ci')
+        cursor.close()
+    conn.close()
 
-def find_repos (user):
-    """Find the repos for a user.
-
-    - user: GitHub user
-
-    """
-
-    repos_url = 'https://api.github.com/users/' + user + '/repos'
-    res = urllib2.urlopen(repos_url)
-    repos_json = res.read()
-    repos = json.loads(repos_json)
-    repo_names = [repo['full_name'] for repo in repos]
-    return (repo_names)
 
 def install_mgtools (tools):
     """Install MetricsGrimoire tools by cloning from git repositories.
@@ -134,6 +123,22 @@ def install_mgtools (tools):
             call(["git", "clone", mgConf[tool]["repo"], dir_tool])
         else:
             call(["git", "--git-dir=" + dir_tool + "/.git", "pull"])
+
+
+def find_repos (user):
+    """Find the repos for a user.
+
+    - user: GitHub user
+
+    """
+
+    repos_url = 'https://api.github.com/users/' + user + '/repos'
+    res = urllib2.urlopen(repos_url)
+    repos_json = res.read()
+    repos = json.loads(repos_json)
+    repo_names = [repo['full_name'] for repo in repos]
+    return (repo_names)
+
 
 
 def run_mgtool (tool, project, dbname):
