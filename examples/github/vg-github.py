@@ -106,25 +106,6 @@ def _prepare_db (tool, name, user, passwd, remove = True):
     conn.close()
 
 
-def install_mgtools (tools):
-    """Install MetricsGrimoire tools by cloning from git repositories.
-
-    - tools: list of tools to install
-    """
-    
-    dir = mgConf["dir"]
-    # Create the installation directory
-    if not os.path.exists(dir):
-        os.makedirs(dir)
-        
-    for tool in tools:
-        dir_tool = mgConf[tool]["dir"]
-        if not os.path.exists(dir_tool):
-            call(["git", "clone", mgConf[tool]["repo"], dir_tool])
-        else:
-            call(["git", "--git-dir=" + dir_tool + "/.git", "pull"])
-
-
 def find_repos (user):
     """Find the repos for a user.
 
