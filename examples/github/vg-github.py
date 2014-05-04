@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2013 Jesus M. Gonzalez-Barahona
+# Copyright (C) 2013, 2014 Jesus M. Gonzalez-Barahona
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,14 +25,24 @@
 #
 # Simple script to retrieve data from GitHub repositories about a project,
 # or all the projects owned by a user.
-# Assumes MetricsGrimoire tools are already installed.
-# If you don't know how to install them, look at
-# misc/metricsgrimoire-setup.py
+# It installs CVSAnalY and Bicho (form MetricsGrimoire git repositories),
+# the needed packages from vizGrimoire git repositories, R dependencies,
+# and main Python dependencies.
 #
-# Example of how to run, for repository VizGrimoire/VizGrimoireR
-# vg-github.py --user jgb --passwd XXX --dir /tmp/pp --removedb
-#  --ghuser ghuser --ghpasswd XXX --vgdir ~/src/vizGrimoire
-#  VizGrimoire/VizGrimoireR
+# There are options for not installing everything once again if the script
+# is run again, run it with --help to get a full list.
+#
+# Example of how to produce a dashboard for repository
+# VizGrimoire/VizGrimoireR:
+#
+# vg-github.py --user jgb --passwd XXX --dir /tmp/vgr --removedb
+#  --ghuser ghuser --ghpasswd XXX VizGrimoire/VizGrimoireR
+#
+# Example of how to produce a dashboard for all repositories owned by
+# organization MetricsGrimoire:
+#
+# vg-github.py --user jgb --passwd XXX --dir /tmp/vgr --removedb
+#  --ghuser ghuser --ghpasswd XXX --isuser MetricsGrimoire
 
 import argparse
 import MySQLdb
