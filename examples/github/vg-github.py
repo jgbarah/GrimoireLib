@@ -46,6 +46,7 @@
 
 import argparse
 import MySQLdb
+from contextlib import closing
 import os
 import shutil
 import errno
@@ -61,6 +62,7 @@ dbPrefix = ""
 dir = ""
 dashboard_dir = ""
 JSONdir = ""
+
 
 def _prepare_db (tool, name, user, passwd, remove = True):
     """Prepare MetricsGrimoire database.
@@ -95,14 +97,12 @@ def _prepare_db (tool, name, user, passwd, remove = True):
     conn = MySQLdb.connect(host='localhost', user=user, passwd=passwd)
     # with clause ensures that connection is closed (and committed) even
     # in the case of exceptions
-    with conn:
-        cursor = conn.cursor()
+    with closing(conn.cursor()) as cursor:
         # Create database and remove it in advance, if needed
         if remove:
             cursor.execute('DROP DATABASE IF EXISTS ' + name)
         cursor.execute('CREATE DATABASE IF NOT EXISTS ' + name +
                        ' CHARACTER SET utf8 COLLATE utf8_unicode_ci')
-        cursor.close()
     conn.close()
 
 
