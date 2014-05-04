@@ -54,23 +54,7 @@ import urllib2
 import json
 import string
 
-# Configuration for tools
-cvsanalyConf = {"bin": "cvsanaly2",
-                "opts": [],
-                "dbuser": "--db-user",
-                "dbpasswd": "--db-password",
-                "db": "--db-database"}
-bichoConf = {"bin": "bicho",
-             "opts": ["-d", "1", "-b", "github"],
-             "dbuser": "--db-user-out",
-             "dbpasswd": "--db-password-out",
-             "db": "--db-database-out"}
-
-conf = {"cvsanaly": cvsanalyConf,
-        "bicho":    bichoConf}
-
 mgConf = {}
-
 rConf = {}
 args = None
 dbPrefix = ""
@@ -150,12 +134,12 @@ def run_mgtool (tool, project, dbname):
                             mgConf[tool]["dir"],
                             mgConf[tool]["bin"])
     opts = [tool_bin]
-    opts.extend (conf[tool]["opts"])
+    opts.extend (mgConf[tool]["opts"])
     if args.user:
-        opts.extend ([conf[tool]["dbuser"], args.user])
+        opts.extend ([mgConf[tool]["dbuser"], args.user])
     if args.passwd:
-        opts.extend ([conf[tool]["dbpasswd"], args.passwd])
-    opts.extend ([conf[tool]["db"], dbname])
+        opts.extend ([mgConf[tool]["dbpasswd"], args.passwd])
+    opts.extend ([mgConf[tool]["db"], dbname])
     # Specific code for running cvsanaly
     if tool == "cvsanaly":
         gitdir = project.split('/', 1)[1]
@@ -597,14 +581,22 @@ misc/metricsgrimoire-setup.py""")
         mgConf["cvsanaly"] = {
             "repo": mgConf["repo"] + "CVSAnalY",
             "dir": "CVSAnalY",
-            "bin": os.path.join(mgConf["dir"], "CVSAnalY", "cvsanaly2")
+            "bin": os.path.join(mgConf["dir"], "CVSAnalY", "cvsanaly2"),
+            "opts": [],
+            "dbuser": "--db-user",
+            "dbpasswd": "--db-password",
+            "db": "--db-database"
             }
         mgConf["cvsanaly"]["ppath"] = mgConf["repohandler"]["dir"] + \
             ":" + os.path.join(mgConf["dir"], mgConf["cvsanaly"]["dir"])
         mgConf["bicho"] = {
             "repo": mgConf["repo"] + "Bicho",
             "dir": "Bicho",
-            "bin": os.path.join("bin", "bicho")
+            "bin": os.path.join("bin", "bicho"),
+            "opts": ["-d", "1", "-b", "github"],
+            "dbuser": "--db-user-out",
+            "dbpasswd": "--db-password-out",
+            "db": "--db-database-out"
             }
         mgConf["bicho"]["ppath"] = os.path.join(mgConf["dir"],
                                                 mgConf["bicho"]["dir"])
