@@ -62,27 +62,45 @@ dir = ""
 dashboard_dir = ""
 JSONdir = ""
 
-def prepare_db (tool, dbname):
-    """Prepare MetricsGrimoire database
-
-    tool: cvsanaly | bicho
-    dbname: name of the database
+def _prepare_db (tool, name, user, passwd, remove = True):
+    """Prepare MetricsGrimoire database.
 
     Prepares (and deletes, if args.removedb was specified) the database
     for a MetricsGrimoire tool.
     This is usually run once per tool, just before the calls to run the tools
+
+    Parameters
+    ----------
+
+    tool: {'cvsanaly', 'bicho'}
+        Tool for which to prepare database.
+    name: string
+        Name of the database to prepare.
+    user: string
+        User name to access the database.
+    passwd: string
+        Password to access the MySQL database.
+    db_remove: Boolean
+        Whether to remove the database before preparing it
+        (default: True).
+
+    Returns
+    -------
+
+    None
+
     """
 
     # Open database connection and get a cursor
-    conn = MySQLdb.connect(host='localhost', user=args.user, passwd=args.passwd)
+    conn = MySQLdb.connect(host='localhost', user=user, passwd=passwd)
     # with clause ensures that connection is closed (and committed) even
     # in the case of exceptions
     with conn:
         cursor = conn.cursor()
         # Create database and remove it in advance, if needed
-        if args.removedb:
-            cursor.execute('DROP DATABASE IF EXISTS ' + dbname)
-        cursor.execute('CREATE DATABASE IF NOT EXISTS ' + dbname +
+        if remove:
+            cursor.execute('DROP DATABASE IF EXISTS ' + name)
+        cursor.execute('CREATE DATABASE IF NOT EXISTS ' + name +
                        ' CHARACTER SET utf8 COLLATE utf8_unicode_ci')
 
 def find_repos (user):
@@ -181,7 +199,7 @@ def run_mgtools (tools, projects, dbprefix):
     for tool in tools:
         # Prepare databases
         dbname = dbprefix + "_" + tool
-        prepare_db (tool, dbname)
+        _prepare_db (tool, dbname, args.user, args.passwd, args.removedb)
         # Run tools
         for project in projects:
             run_mgtool (tool, project, dbname)
