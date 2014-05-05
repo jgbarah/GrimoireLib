@@ -191,11 +191,10 @@ def run_mgtool (tool, project, db_conf, mg_dir, tool_conf):
     opts.extend ([tool_conf["db"], db_conf["name"]])
     # Specific code for running cvsanaly
     if tool == "cvsanaly":
-        gitdir = project.split('/', 1)[1]
-        call(["git", "clone", "https://github.com/" + project + ".git",
-              dir + '/repos/' + gitdir])
+        clone_repos (dir + '/repos/',
+                     {project: "https://github.com/" + project + ".git"})
         opts.append ("--extensions=" + "CommitsLOC")
-        opts.append (dir + '/repos/' + gitdir)
+        opts.append (dir + '/repos/' + project)
         if not args.verbose:
              opts.append ("--quiet")
     # Specific code for running bicho
@@ -254,10 +253,11 @@ def create_rlib (libdir):
         else: 
             raise
 
-def install_from_git (dir, pkgs, conf):
-    """Install some source packages from their git repos.
 
-    Just clone the repos if corresponding subdirectories don't exist,
+def clone_repos (dir, repos):
+    """Clone under local directory dir, from the specified git repos.
+
+    Clone locally the repos if corresponding subdirectories don't exist,
     or pull from them if they exist.
     For each pkg, a corresponding entry in conf must exist. That entry
     should be a dictionary, with at lease two entries:
@@ -266,27 +266,30 @@ def install_from_git (dir, pkgs, conf):
 
     Parameters
     ----------
+
     dir : string
-        Path of directory to install vizGrimoire packages as subdirectories
-    pkgs: sequence of strings
-        List of packages to install
-    conf: dictionay
-        Keys are pkg names, values are dictionaries (see description above)
+        Path of directory to install git repos as subdirectories
+    repos : dictionary
+        Git repos to clone. Each entry in the dictionary will correspond
+        to a repository: keys are identifiers for repos, that will be
+        used as subdir names, values are repo urls.
 
     Returns
     -------
+
     None
 
     """
 
     if not os.path.exists(dir):
         os.makedirs(dir)
-    for pkg in pkgs:
-        dir_pkg = os.path.join(dir, conf[pkg]["dir"])
-        if not os.path.exists(dir_pkg):
-            call(["git", "clone", conf[pkg]["repo"], dir_pkg])
+    for repo in repos:
+        dir_repo = os.path.join(dir, repo)
+        if not os.path.exists(dir_repo):
+            os.makedirs(dir_repo)
+            call(["git", "clone", repos[repo], dir_repo])
         else:
-            call(["git", "--git-dir=" + dir_pkg + "/.git", "pull"])
+            call(["git", "--git-dir=" + dir_repo + "/.git", "pull"])
 
 def install_vizgrimoirer (libdir, vizgrimoirer_pkgdir):
     """Install the appropriate vizgrimore R package in a specific location
@@ -654,7 +657,9 @@ misc/metricsgrimoire-setup.py""")
             }
         mgConf["bicho"]["ppath"] = os.path.join(mgConf["dir"],
                                                 mgConf["bicho"]["dir"])
-        install_from_git (mgConf["dir"], mgConf["tools"], mgConf)
+        clone_repos (mgConf["dir"],
+                     {mgConf[dir]["dir"]: mgConf[dir]["repo"]
+                      for dir in mgConf["tools"]})
         if args.isuser:
             repos = find_repos (args.name)
         else:
@@ -663,9 +668,8 @@ misc/metricsgrimoire-setup.py""")
 
     # Install vizGrinmoire packages needed, from their git repos
     if not args.noinstvg:
-        install_from_git (vgConf["dir"],
-                          ["vizGrimoireJS", "vizGrimoireUtils"],
-                          vgConf)
+        clone_repos (vgConf["dir"],
+                     {dir: vgConf[dir]["repo"] for dir in vgConf["pkgs"]})
 
     # Run unique_ids and affiliation (people stuff)
     # except that --nopeople was specified
