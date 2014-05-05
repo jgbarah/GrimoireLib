@@ -107,9 +107,22 @@ def _prepare_db (tool, name, user, passwd, remove = True):
 
 
 def find_repos (user):
-    """Find the repos for a user.
+    """Find the repos for a GitHub user or organization.
 
-    - user: GitHub user
+    Gets a list of the repositories (projects) owned by a GitHub
+    user or organization, by querying the GitHub REST API.
+
+    Parameters
+    ----------
+
+    user: string
+        GitHub user or organziation
+
+    Returns
+    -------
+
+    tuple of strings
+        Repository names.
 
     """
 
@@ -119,7 +132,6 @@ def find_repos (user):
     repos = json.loads(repos_json)
     repo_names = [repo['full_name'] for repo in repos]
     return (repo_names)
-
 
 
 def run_mgtool (tool, project, dbname):
