@@ -134,28 +134,61 @@ def find_repos (user):
     return (repo_names)
 
 
-def run_mgtool (tool, project, dbname):
-    """Run MetricsGrimoire tool
+def run_mgtool (tool, project, db_conf, mg_dir, tool_conf):
+    """Run MetricsGrimoire tool.
 
-    - tool: cvsanaly | bicho
-    - project: GitHub project, such as VizGrimoire/VizGrimoireR
-    - dbname: name of the database
+    Run a MetricsGrimoire tool to extract data from project, and
+    store it in dbname.
+
+    Parameters
+    ----------
+
+    tool: {'cvsanaly', 'bicho'}
+        Tool to run
+    project: string
+        GitHub project, such as 'VizGrimoire/VizGrimoireR'
+    db_conf: dictionary
+        configuration for the database (see Notes below)
+    mg_dir: string
+        directory with MegricsGRimoire tools
+    tool_conf: dictionary
+        configuration for the tool to run (see Notes below)
 
     Uses information in global dictionary conf for deciding
     about options for the tool.
+
+    Notes
+    -----
+
+    The db_conf dictionary must have at least the following entries:
+
+    "name": MySQL database name
+    "user": MySQL user to access database
+        None if no user is needed
+    "passwd": password for user
+        None if no password is needed
+
+    The tool_conf dictionary must have at least the following entries:
+
+    "dir": directory (relative to mg_dir) with the installed tool
+    "bin": path of binary for the installed tool (relative to "dir")
+    "db": tool option to specify the name of the  MySQL database
+    "dbuser": tool option to specify the MySQL user to access the database
+    "dbpasswd": tool option to specify the passwd for the MySQL user
+    "opts": other needed parameters (options) to run the tool
+    "ppath": PYTHONPATH path needed to run the tool
+
     """
 
     # Prepare options to run the tool
-    tool_bin = os.path.join(mgConf["dir"],
-                            mgConf[tool]["dir"],
-                            mgConf[tool]["bin"])
+    tool_bin = os.path.join(mg_dir, tool_conf["dir"], tool_conf["bin"])
     opts = [tool_bin]
-    opts.extend (mgConf[tool]["opts"])
-    if args.user:
-        opts.extend ([mgConf[tool]["dbuser"], args.user])
-    if args.passwd:
-        opts.extend ([mgConf[tool]["dbpasswd"], args.passwd])
-    opts.extend ([mgConf[tool]["db"], dbname])
+    opts.extend (tool_conf["opts"])
+    if db_conf["user"]:
+        opts.extend ([tool_conf["dbuser"], db_conf["user"]])
+    if db_conf["passwd"]:
+        opts.extend ([tool_conf["dbpasswd"], db_conf["passwd"]])
+    opts.extend ([tool_conf["db"], db_conf["name"]])
     # Specific code for running cvsanaly
     if tool == "cvsanaly":
         gitdir = project.split('/', 1)[1]
@@ -174,7 +207,7 @@ def run_mgtool (tool, project, dbname):
     print "Running MetricsGrimoire tool (" + tool + ")" 
     # Run the tool
     env = os.environ.copy()
-    env ["PYTHONPATH"] = mgConf[tool]["ppath"] + ":" + \
+    env ["PYTHONPATH"] = tool_conf["ppath"] + ":" + \
         os.environ.get("PYTHONPATH", "")
     if args.verbose:
         print "PYTHONPATH: " + env ["PYTHONPATH"]
@@ -200,7 +233,12 @@ def run_mgtools (tools, projects, dbprefix):
         _prepare_db (tool, dbname, args.user, args.passwd, args.removedb)
         # Run tools
         for project in projects:
-            run_mgtool (tool, project, dbname)
+            run_mgtool (tool = tool, project = project,
+                        db_conf = {"name": dbname,
+                                   "user": args.user,
+                                   "passwd": args.passwd},
+                        mg_dir = mgConf["dir"], 
+                        tool_conf = mgConf[tool])
 
 def create_rlib (libdir):
     """Create directory for the R library
