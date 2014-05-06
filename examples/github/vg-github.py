@@ -23,26 +23,29 @@
 #
 # vg-github.py
 #
-# Simple script to retrieve data from GitHub repositories about a project,
-# or all the projects owned by a user.
-# It installs CVSAnalY and Bicho (form MetricsGrimoire git repositories),
-# the needed packages from vizGrimoire git repositories, R dependencies,
-# and main Python dependencies.
-#
-# There are options for not installing everything once again if the script
-# is run again, run it with --help to get a full list.
-#
-# Example of how to produce a dashboard for repository
-# VizGrimoire/VizGrimoireR:
-#
-# vg-github.py --user jgb --passwd XXX --dir /tmp/vgr --removedb
-#  --ghuser ghuser --ghpasswd XXX VizGrimoire/VizGrimoireR
-#
-# Example of how to produce a dashboard for all repositories owned by
-# organization MetricsGrimoire:
-#
-# vg-github.py --user jgb --passwd XXX --dir /tmp/vgr --removedb
-#  --ghuser ghuser --ghpasswd XXX --isuser MetricsGrimoire
+
+"""Simple script to retrieve data from GitHub repositories about a project,
+or all the projects owned by a user.
+It installs CVSAnalY and Bicho (form MetricsGrimoire git repositories),
+the needed packages from vizGrimoire git repositories, R dependencies,
+and main Python dependencies.
+
+There are options for not installing everything once again if the script
+is run again, run it with --help to get a full list.
+
+Example of how to produce a dashboard for repository
+VizGrimoire/VizGrimoireR:
+
+vg-github.py --user jgb --passwd XXX --dir /tmp/vgr --removedb
+ --ghuser ghuser --ghpasswd XXX VizGrimoire/VizGrimoireR
+
+Example of how to produce a dashboard for all repositories owned by
+organization MetricsGrimoire:
+
+vg-github.py --user jgb --passwd XXX --dir /tmp/vgr --removedb
+ --ghuser ghuser --ghpasswd XXX --isuser MetricsGrimoire
+
+"""
 
 import argparse
 import MySQLdb
@@ -63,8 +66,62 @@ dir = ""
 dashboard_dir = ""
 JSONdir = ""
 
+class DBConf:
+    """Configuration for a MySQL database.
 
-def _prepare_db (tool, name, user, passwd, remove = True):
+    Includes information to access the database, such as MySQL user name,
+    password for that user, etc.
+
+    Parameters
+    ----------
+
+    name: string
+        Database name (or prefix, in some cases)
+    host: string
+        Host name of the machine hosting the database. Default: 'localhost'
+    port: integer
+        Port of the database in host. Default: None, if standard port is used
+    user: string
+        MySQL user to access database. Default: None, if no user is needed
+    passwd: string
+        Password for user. Default: None, if no password is needed
+    
+    Attributes
+    ----------
+
+    Same as parameters.
+
+    """
+
+    def __init__ (self, name, host = 'localhost', port = None,
+                  user = None, passwd = None):
+
+        self.name = name
+        self.host = host
+        self.port = port
+        self.user = user
+        self.passwd = passwd
+
+    def connect (self):
+        """Return a dictionary with parameters needed by MySQLdb.connect().
+
+        Returns
+        -------
+
+        dictionary:
+            Values useful for MySQLdb.connect(), omiting those that are None.
+            Those are: 'host', 'port', 'user', 'passwd'
+        """
+
+        ret_vars = {}
+        my_vars = vars (self)
+        for key in ['host', 'port', 'user', 'passwd']:
+            if my_vars[key] is not None:
+                ret_vars[key] = my_vars[key]
+        return (ret_vars)
+
+
+def _prepare_db (tool, conf, remove = True):
     """Prepare MetricsGrimoire database.
 
     Prepares (and deletes, if args.removedb was specified) the database
@@ -76,13 +133,9 @@ def _prepare_db (tool, name, user, passwd, remove = True):
 
     tool: {'cvsanaly', 'bicho'}
         Tool for which to prepare database.
-    name: string
-        Name of the database to prepare.
-    user: string
-        User name to access the database.
-    passwd: string
-        Password to access the MySQL database.
-    db_remove: Boolean
+    conf: DBConf
+        Configuration for the database
+    remove: Boolean
         Whether to remove the database before preparing it
         (default: True).
 
@@ -94,14 +147,15 @@ def _prepare_db (tool, name, user, passwd, remove = True):
     """
 
     # Open database connection and get a cursor
-    conn = MySQLdb.connect(host='localhost', user=user, passwd=passwd)
+    conn = MySQLdb.connect(**conf.connect())
+
     # with clause ensures that connection is closed (and committed) even
     # in the case of exceptions
     with closing(conn.cursor()) as cursor:
         # Create database and remove it in advance, if needed
         if remove:
-            cursor.execute('DROP DATABASE IF EXISTS ' + name)
-        cursor.execute('CREATE DATABASE IF NOT EXISTS ' + name +
+            cursor.execute('DROP DATABASE IF EXISTS ' + conf.name)
+        cursor.execute('CREATE DATABASE IF NOT EXISTS ' + conf.name +
                        ' CHARACTER SET utf8 COLLATE utf8_unicode_ci')
     conn.close()
 
@@ -147,26 +201,20 @@ def run_mgtool (tool, project, db_conf, mg_dir, tool_conf):
         Tool to run
     project: string
         GitHub project, such as 'VizGrimoire/VizGrimoireR'
-    db_conf: dictionary
-        configuration for the database (see Notes below)
+    db_conf: DBConf
+        Configuration for the database
     mg_dir: string
-        directory with MegricsGRimoire tools
+        Directory with MegricsGRimoire tools
     tool_conf: dictionary
-        configuration for the tool to run (see Notes below)
+        Configuration for the tool to run (see Notes below)
 
-    Uses information in global dictionary conf for deciding
-    about options for the tool.
+    Returns
+    -------
+
+    None
 
     Notes
     -----
-
-    The db_conf dictionary must have at least the following entries:
-
-    "name": MySQL database name
-    "user": MySQL user to access database
-        None if no user is needed
-    "passwd": password for user
-        None if no password is needed
 
     The tool_conf dictionary must have at least the following entries:
 
@@ -184,11 +232,11 @@ def run_mgtool (tool, project, db_conf, mg_dir, tool_conf):
     tool_bin = os.path.join(mg_dir, tool_conf["dir"], tool_conf["bin"])
     opts = [tool_bin]
     opts.extend (tool_conf["opts"])
-    if db_conf["user"]:
-        opts.extend ([tool_conf["dbuser"], db_conf["user"]])
-    if db_conf["passwd"]:
-        opts.extend ([tool_conf["dbpasswd"], db_conf["passwd"]])
-    opts.extend ([tool_conf["db"], db_conf["name"]])
+    if db_conf.user:
+        opts.extend ([tool_conf["dbuser"], db_conf.user])
+    if db_conf.passwd:
+        opts.extend ([tool_conf["dbpasswd"], db_conf.passwd])
+    opts.extend ([tool_conf["db"], db_conf.name])
     # Specific code for running cvsanaly
     if tool == "cvsanaly":
         clone_repos (dir + '/repos/',
@@ -214,28 +262,51 @@ def run_mgtool (tool, project, db_conf, mg_dir, tool_conf):
     call(opts, env=env)
 
 
-def run_mgtools (tools, projects, dbprefix):
+def run_mgtools (tools, projects, db_conf, db_remove):
     """Run MetricsGrimoire tools
 
-    - tools: [cvsanaly, bicho, ...] (list)
-    - project: GitHub project, such as VizGrimoire/VizGrimoireR
-    - dbprefix: prefix for the name of the database
+    Run the specified MetricsGrimoire tools for the specified
+    GitHub projects, preparing the corresponding databases if needed
 
-    Run the specified MetricsGRimoire tools, preparing their
-    corresponding databases if needed
+    Parameters
+    ----------
+
+    tools: list of {'cvsanaly', 'bicho'}
+        List of tools to run (usually ['cvsanaly', 'bicho']
+    projects: list of strings
+        List of GitHub projects, such as VizGrimoire/VizGrimoireR
+    db_conf: DBConf
+        Configuration for the database (see Notes below)
+        db_conf.name will be used as the prefix for database names
+    db_remove: Boolean
+        Whether to remove the databases before preparing it.
+
+    Returns
+    -------
+
+    None
+
+    Examples
+    --------
+
+    run_mgtools (tools = ['cvsanaly', 'bicho'],
+                 projects = ['VizGrimoire/VizGrimoireR'],
+                 db_conf = DBConf (name = 'mg', user = 'jgb', passwd = 'XXX')
 
     """
 
     for tool in tools:
         # Prepare databases
-        dbname = dbprefix + "_" + tool
-        _prepare_db (tool, dbname, args.user, args.passwd, args.removedb)
+        dbname = db_conf.name + "_" + tool
+        _prepare_db (tool = tool, conf = db_conf, remove = db_remove)
         # Run tools
         for project in projects:
             run_mgtool (tool = tool, project = project,
-                        db_conf = {"name": dbname,
-                                   "user": args.user,
-                                   "passwd": args.passwd},
+                        db_conf = DBConf (name = dbname,
+                                          host = db_conf.host,
+                                          port = db_conf.port,
+                                          user = db_conf.user,
+                                          passwd = db_conf.passwd),
                         mg_dir = mgConf["dir"], 
                         tool_conf = mgConf[tool])
 
@@ -664,7 +735,12 @@ misc/metricsgrimoire-setup.py""")
             repos = find_repos (args.name)
         else:
             repos = [args.name]
-        run_mgtools (["cvsanaly", "bicho"], repos, dbPrefix)
+        run_mgtools (tools = ["cvsanaly", "bicho"],
+                     projects = repos,
+                     db_conf = DBConf(name = dbPrefix,
+                                      user = args.user,
+                                      passwd = args.passwd),
+                     db_remove = args.removedb)
 
     # Install vizGrinmoire packages needed, from their git repos
     if not args.noinstvg:
