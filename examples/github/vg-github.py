@@ -43,7 +43,7 @@ Example of how to produce a dashboard for all repositories owned by
 organization MetricsGrimoire:
 
 vg-github.py --user jgb --passwd XXX --dir /tmp/vgr --removedb
- --ghuser ghuser --ghpasswd XXX --isuser MetricsGrimoire
+ --ghuser ghuser --ghpasswd XXX MetricsGrimoire
 
 """
 
@@ -298,15 +298,16 @@ def run_mgtools (tools, projects, db_conf, db_remove):
     for tool in tools:
         # Prepare databases
         dbname = db_conf.name + "_" + tool
-        _prepare_db (tool = tool, conf = db_conf, remove = db_remove)
+        db_conf_tool = DBConf (name = dbname,
+                               host = db_conf.host,
+                               port = db_conf.port,
+                               user = db_conf.user,
+                               passwd = db_conf.passwd)
+        _prepare_db (tool = tool, conf = db_conf_tool, remove = db_remove)
         # Run tools
         for project in projects:
             run_mgtool (tool = tool, project = project,
-                        db_conf = DBConf (name = dbname,
-                                          host = db_conf.host,
-                                          port = db_conf.port,
-                                          user = db_conf.user,
-                                          passwd = db_conf.passwd),
+                        db_conf = db_conf_tool,
                         mg_dir = mgConf["dir"], 
                         tool_conf = mgConf[tool])
 
@@ -411,9 +412,6 @@ def install_rdepend (libdir, vizgrimoirer_pkgdir):
         pkgVector = pkgVector + '"' + pkg.strip() + '"'
     pkgVector = pkgVector + ')'
     # Run R to install all packages
-    # rcode = 'install.packages(' + pkgVector + ', lib="' + \
-    #        libdir + '", repos="http://cran.rstudio.com/", ' + \
-    #        'dependencies=c("Depends"))\n'
     rcode = 'install.packages(' + pkgVector + ', lib="' + \
            libdir + '", repos="http://cran.rstudio.com/")\n'
     env = os.environ.copy()
@@ -585,13 +583,11 @@ refrains to do so if they already exist (projectname will have
 It assumes MetricsGrimoire tools are already installed.
 If you don't know how to install them, look at
 misc/metricsgrimoire-setup.py""")
-        parser.add_argument("name",
-                            help="GitHub project or user (if --isuser) name")
-        parser.add_argument("--isuser",
-                            help="Name is the user who owns projects to analyze",
-                            action="store_true")
-        parser.add_argument("--dbprefix",
-                            help="Prefix for MySQL database (default: name argument)")
+        parser.add_argument("projects",
+                            help="GitHub user(s)/organization(s) and/or project(s) (if it contains '/') to analyze",
+                            nargs='+')
+        parser.add_argument("--name",
+                            help="Project name (default: first projects argument)")
         parser.add_argument("--user",
                             help="MySQL user name")
         parser.add_argument("--passwd",
@@ -639,12 +635,11 @@ misc/metricsgrimoire-setup.py""")
         return (args)
 
     args = parse_args()
-    if args.dbprefix:
-        dbPrefix = args.dbprefix.lower()
-    elif not args.isuser:
-        dbPrefix = args.name.replace('/', '_').replace('-','_').lower()
+    if args.name:
+        name = args.name
     else:
-        dbPrefix = args.name.replace('-','_').lower()
+        name = args.projects[0]
+    dbPrefix = name.replace('/', '_').replace('-','_').lower()
     if args.dir:
         dir = args.dir
     else:
@@ -731,12 +726,16 @@ misc/metricsgrimoire-setup.py""")
         clone_repos (mgConf["dir"],
                      {mgConf[dir]["dir"]: mgConf[dir]["repo"]
                       for dir in mgConf["tools"]})
-        if args.isuser:
-            repos = find_repos (args.name)
-        else:
-            repos = [args.name]
+        projects = []
+        for project in args.projects:
+            if '/' in project:
+                # Single GitHub repo
+                projects.append (project)
+            else:
+                # GitHub user/organization
+                projects.extend(find_repos (project))
         run_mgtools (tools = ["cvsanaly", "bicho"],
-                     projects = repos,
+                     projects = projects,
                      db_conf = DBConf(name = dbPrefix,
                                       user = args.user,
                                       passwd = args.passwd),
