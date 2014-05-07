@@ -576,13 +576,12 @@ if __name__ == "__main__":
 
         parser = argparse.ArgumentParser(description="""
 Simple script to retrieve data from GitHub repositories about a project.
-It creates MySQL databases named projectname_cvsanaly, projectname_bicho
-(assummes permission to create databases), but
-refrains to do so if they already exist (projectname will have
-/ changed to _).
-It assumes MetricsGrimoire tools are already installed.
-If you don't know how to install them, look at
-misc/metricsgrimoire-setup.py""")
+It creates MySQL databases named name_cvsanaly, name_bicho (assummes
+permission to create databases), but refrains to do so if they already
+exist (name will have / and - changed to _).
+It installs MetricsGrimoire and vizGrimoire tools (except for GrimoireLib)
+from their git repos, and their R and main Python dependencies.
+""")
         parser.add_argument("projects",
                             help="GitHub user(s)/organization(s) and/or project(s) (if it contains '/') to analyze",
                             nargs='+')
