@@ -1,13 +1,11 @@
 
 # Analysis of GitHub repositories using Grimoire tools
 
-## Installing Python dependencies
+How to run:
 
-Let's assume we want to install dependencies in /tmp/pip:
+vg-github.py --user jgb --passwd XXX --dir /tmp/vgr --removedb
+ --ghuser ghuser --ghpasswd XXX MetricsGrimoire
 
-pip install --target=/tmp/pip rpy2
+More info:
 
-For this to work, the proper PYTONPATH has to be set up (assuming pip was run with python2.7:
-
-export PYTHONPATH=/tmp/pip/:$PYTHONPATH
-
+vg-github.py --help
