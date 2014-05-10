@@ -42,8 +42,8 @@ vg-github.py --user jgb --passwd XXX --dir /tmp/vgr --removedb
 Example of how to produce a dashboard for all repositories owned by
 organization MetricsGrimoire:
 
-vg-github.py --user jgb --passwd XXX --dir /tmp/vgr --removedb
- --ghuser ghuser --ghpasswd XXX MetricsGrimoire
+vg-github.py --user jgb --passwd XXX --dir ~/dashboard --removedb
+ --ghuser ghuser --ghpasswd XXX MetricsGrimoire VizGrimoire
 
 """
 
@@ -311,20 +311,6 @@ def run_mgtools (tools, projects, db_conf, db_remove):
                         mg_dir = mgConf["dir"], 
                         tool_conf = mgConf[tool])
 
-def create_rlib (libdir):
-    """Create directory for the R library
-
-    -  libdir: directory to install R libraries
-    """
-
-    try:
-        os.makedirs(libdir)
-    except OSError as e:
-        if e.errno == errno.EEXIST and os.path.isdir(libdir):
-            pass
-        else: 
-            raise
-
 
 def clone_repos (dir, repos):
     """Clone under local directory dir, from the specified git repos.
@@ -353,8 +339,7 @@ def clone_repos (dir, repos):
 
     """
 
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+    create_dir (dir)
     for repo in repos:
         dir_repo = os.path.join(dir, repo)
         if not os.path.exists(dir_repo):
@@ -362,6 +347,30 @@ def clone_repos (dir, repos):
             call(["git", "clone", repos[repo], dir_repo])
         else:
             call(["git", "--git-dir=" + dir_repo + "/.git", "pull"])
+
+
+def create_dir (dir):
+    """Create dir directory, including subdirectories if needed.
+
+    Do nothing if dir directory already exists. Raise exception if
+    the path existis, but it is not a directory.
+
+    Parameters
+    ----------
+    
+    dir: string
+        Path of directory to create
+
+    """
+
+    try:
+        os.makedirs(dir)
+    except OSError as e:
+        if e.errno == errno.EEXIST and os.path.isdir(dir):
+            pass
+        else: 
+            raise
+
 
 def install_vizgrimoirer (libdir, vizgrimoirer_pkgdir):
     """Install the appropriate vizgrimore R package in a specific location
@@ -483,13 +492,7 @@ def run_analysis (scripts, base_dbs, id_dbs, outdir):
     """
 
     # Create the JSON data directory for the scripts to write to
-    try:
-        os.makedirs(outdir)
-    except OSError as e:
-        if e.errno == errno.EEXIST and os.path.isdir(outdir):
-            pass
-        else: 
-            raise
+    create_dir(outdir)
     # Run the analysis scripts
     env = os.environ.copy()
     env["R_LIBS"] = rConf["libdir"] + ":" + os.environ.get("R_LIBS", "")
@@ -753,7 +756,7 @@ from their git repos, and their R and main Python dependencies.
 
     # Install vizgrimoire R package and its R dependencies, just in case
     if not args.noinstvgr:
-        create_rlib (rConf["libdir"])
+        create_dir (rConf["libdir"])
     if not args.noinstvgr and not args.nordep:
         install_rdepend (rConf["libdir"], rConf["vgrpkg"])
     if not args.noinstvgr:
