@@ -53,7 +53,7 @@ from contextlib import closing
 import os
 import shutil
 import errno
-from subprocess import call, Popen, PIPE
+from subprocess import check_call, Popen, PIPE
 import urllib2
 import json
 import string
@@ -259,7 +259,7 @@ def run_mgtool (tool, project, db_conf, mg_dir, tool_conf):
     if args.verbose:
         print "PYTHONPATH: " + env ["PYTHONPATH"]
         print "Running: " + " ".join(opts)
-    call(opts, env=env)
+    check_call(opts, env=env)
 
 
 def run_mgtools (tools, projects, db_conf, db_remove):
@@ -344,9 +344,9 @@ def clone_repos (dir, repos):
         dir_repo = os.path.join(dir, repo)
         if not os.path.exists(dir_repo):
             os.makedirs(dir_repo)
-            call(["git", "clone", repos[repo], dir_repo])
+            check_call(["git", "clone", repos[repo], dir_repo])
         else:
-            call(["git", "--git-dir=" + dir_repo + "/.git", "pull"])
+            check_call(["git", "--git-dir=" + dir_repo + "/.git", "pull"])
 
 
 def create_dir (dir):
@@ -388,7 +388,7 @@ def install_vizgrimoirer (libdir, vizgrimoirer_pkgdir):
 
     env = os.environ.copy()
     env ["R_LIBS"] = libdir
-    call (["R", "CMD", "INSTALL", vizgrimoirer_pkgdir], env=env)
+    check_call (["R", "CMD", "INSTALL", vizgrimoirer_pkgdir], env=env)
 
 def install_rdepend (libdir, vizgrimoirer_pkgdir):
     """Install R dependencies in a specific location
@@ -438,7 +438,7 @@ def install_pdepend (libdir, libs):
     """
 
     for lib in libs:
-        call (["pip", "install", "--target=" + libdir, lib])
+        check_call (["pip", "install", "--target=" + libdir, lib])
 
 def unique_ids (dbprefix):
     """Run unique identities stuff
@@ -450,12 +450,12 @@ def unique_ids (dbprefix):
     print os.path.join(vgConf["dir"],
                         vgConf["vizGrimoireUtils"]["dir"],
                         vguConf["unifypeople"])
-    call ([os.path.join(vgConf["dir"],
+    check_call ([os.path.join(vgConf["dir"],
                         vgConf["vizGrimoireUtils"]["dir"],
                         vguConf["unifypeople"]),
            "-d", dbprefix + "_" + "cvsanaly",
            "-u", args.user, "-p", args.passwd, "-i", "no"])
-    call ([os.path.join(vgConf["dir"],
+    check_call ([os.path.join(vgConf["dir"],
                         vgConf["vizGrimoireUtils"]["dir"],
                         vguConf["ds2id"]),
            "--data-source=its",
@@ -470,7 +470,7 @@ def affiliation (dbprefix):
 
     """
 
-    call ([os.path.join(vgConf["dir"],
+    check_call ([os.path.join(vgConf["dir"],
                         vgConf["vizGrimoireUtils"]["dir"],
                         vguConf["domains"]),
            "-d", dbprefix + "_" + "cvsanaly",
@@ -501,14 +501,14 @@ def run_analysis (scripts, base_dbs, id_dbs, outdir):
         os.environ.get("PYTHONPATH", "")
     env["LANG"] = ""
     for script, base_db, id_db in zip (scripts, base_dbs, id_dbs):
-        call_list = [script, "-d", base_db,
+        check_call_list = [script, "-d", base_db,
                      "--dbuser", args.user, "--dbpassword", args.passwd,
                      "-i", id_db,
                      "--granularity", "weeks",
                      "--destination", outdir]
         if args.verbose:
             print "Running: " + " ".join (call_list)
-        call (call_list, env=env)
+        check_call (call_list, env=env)
 
 def produce_config (config_template, config_file):
     """Produce a config.json file by translating a template file.
@@ -523,8 +523,8 @@ def produce_config (config_template, config_file):
                    " from template " + config_template + ".")
     subst = dict (start_date = "2002-10-10",
                   end_date = "2013-12-31",
-                  project_name = args.name,
-                  project_url = "http://github.com/" + args.name,
+                  project_name = name,
+                  project_url = "http://github.com/" + name,
                   scm_url = "",
                   its_url = "")
     template_str = ""
