@@ -249,6 +249,11 @@ class ITS(DataSource):
         fn = os.path.join(destdir, filter_.get_filename(ITS()))
         createJSON(items, fn)
 
+        if filter_name in ("domain", "company", "repository"):
+            items_list = {'name' : [], 'closed_365' : [], 'closers_365' : []}
+        else:
+            items_list = items
+
         for item in items :
             item_name = "'"+ item+ "'"
             logging.info (item_name)
@@ -262,10 +267,18 @@ class ITS(DataSource):
             fn = os.path.join(destdir, filter_item.get_static_filename(ITS()))
             createJSON(agg, fn)
 
+            if filter_name in ("domain", "company", "repository"):
+                items_list['name'].append(item.replace('/', '_'))
+                items_list['closed_365'].append(agg['closed_365'])
+                items_list['closers_365'].append(agg['closers_365'])
+
             if (filter_name in ["company","domain"]):
                 top = ITS.get_top_data(startdate, enddate, identities_db, filter_item, npeople)
                 fn = os.path.join(destdir, filter_item.get_top_filename(ITS()))
                 createJSON(top, fn)
+
+        fn = os.path.join(destdir, filter_.get_filename(ITS()))
+        createJSON(items_list, fn)
 
         if (filter_name == "company"):
             closed = ITS.get_filter_summary(filter_, period, startdate, enddate, identities_db, 10)
@@ -311,6 +324,93 @@ class ITS(DataSource):
 
         # Markov
         vizr.ReportMarkovChain(destdir)
+
+    @staticmethod
+    def _remove_people(people_id):
+        # Remove from people
+        q = "DELETE FROM people_upeople WHERE people_id='%s'" % (people_id)
+        ExecuteQuery(q)
+        q = "DELETE FROM people WHERE id='%s'" % (people_id)
+        ExecuteQuery(q)
+
+    @staticmethod
+    def _remove_issue(issue_id):
+        # Backend name
+        its_type = ITS._get_backend().its_type
+        db_ext = its_type
+        if its_type == "lp": db_ext = "launchpad"
+        elif its_type == "bg": db_ext = "bugzilla"
+        # attachments
+        q = "DELETE FROM attachments WHERE issue_id='%s'" % (issue_id)
+        ExecuteQuery(q)
+        # changes
+        q = "DELETE FROM changes WHERE issue_id='%s'" % (issue_id)
+        ExecuteQuery(q)
+        # comments
+        q = "DELETE FROM comments WHERE issue_id='%s'" % (issue_id)
+        ExecuteQuery(q)
+        # related_to
+        q = "DELETE FROM related_to WHERE issue_id='%s'" % (issue_id)
+        ExecuteQuery(q)
+        # issues_ext_bugzilla
+        q = "DELETE FROM issues_ext_%s WHERE issue_id='%s'" % (db_ext, issue_id)
+        ExecuteQuery(q)
+        # issues_log_bugzilla
+        q = "DELETE FROM issues_log_%s WHERE issue_id='%s'" % (db_ext, issue_id)
+        ExecuteQuery(q)
+        # issues_watchers
+        q = "DELETE FROM issues_watchers WHERE issue_id='%s'" % (issue_id)
+        ExecuteQuery(q)
+        # issues
+        q = "DELETE FROM issues WHERE id='%s'" % (issue_id)
+        ExecuteQuery(q)
+
+    @staticmethod
+    def remove_filter_data(filter_):
+        uri = filter_.get_item()
+        logging.info("Removing ITS filter %s %s" % (filter_.get_name(),filter_.get_item()))
+        q = "SELECT * from trackers WHERE url='%s'" % (uri)
+        repo = ExecuteQuery(q)
+        if 'id' not in repo:
+            logging.error("%s not found" % (uri))
+            return
+
+        def get_people_one_repo(field):
+            return  """
+                SELECT %s FROM (SELECT COUNT(DISTINCT(tracker_id)) AS total, %s
+                FROM issues
+                GROUP BY %s
+                HAVING total=1) t
+                """ % (field, field, field)
+
+
+        logging.info("Removing people")
+        ## Remove submitted_by that exists only in this repository
+        q = """
+            SELECT DISTINCT(submitted_by) from issues
+            WHERE tracker_id='%s' AND submitted_by in (%s)
+        """  % (repo['id'],get_people_one_repo("submitted_by"))
+        res = ExecuteQuery(q)
+        for people_id in res['submitted_by']:
+            ITS._remove_people(people_id)
+        ## Remove assigned_to that exists only in this repository
+        q = """
+            SELECT DISTINCT(assigned_to) from issues
+            WHERE tracker_id='%s' AND assigned_to in (%s)
+        """  % (repo['id'],get_people_one_repo("assigned_to"))
+        res = ExecuteQuery(q)
+        for people_id in res['assigned_to']:
+            ITS._remove_people(people_id)
+
+        # Remove people activity
+        logging.info("Removing issues")
+        q = "SELECT id from issues WHERE tracker_id='%s'" % (repo['id'])
+        res = ExecuteQuery(q)
+        for issue_id in res['id']:
+            ITS._remove_issue(issue_id)
+        # Remove filter
+        q = "DELETE from trackers WHERE id='%s'" % (repo['id'])
+        ExecuteQuery(q)
 
     @staticmethod
     def get_metrics_definition ():
@@ -558,6 +658,13 @@ def GetITSInfo (period, startdate, enddate, identities_db, type_analysis, closed
         repos = AggIssuesRepositories(period, startdate, enddate, identities_db, type_analysis)
         init_date = GetInitDate(startdate, enddate, identities_db, type_analysis)
         end_date = GetEndDate(startdate, enddate, identities_db, type_analysis)
+
+        # Data from the last 365 days
+        fromdate = GetDates(enddate, 365)[1]
+        closed_365 = AggIssuesClosed(period, fromdate, enddate, identities_db, type_analysis, closed_condition)
+        closers_365 = AggIssuesClosers(period, fromdate, enddate, identities_db, type_analysis, closed_condition)
+        closed['closed_365'] = closed_365['closed']
+        closers['closers_365'] = closers_365['closers']
 
     data = dict(closed.items() + closers.items()+ changed.items())
     data = dict(data.items() + changers.items() + open.items())

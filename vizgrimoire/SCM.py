@@ -184,6 +184,11 @@ class SCM(DataSource):
         fn = os.path.join(destdir, filter_.get_filename(SCM()))
         createJSON(items, fn)
 
+        if filter_name in ("domain", "company", "repository"):
+            items_list = {'name' : [], 'commits_365' : [], 'authors_365' : []}
+        else:
+            items_list = items
+
         for item in items :
             item_name = "'"+ item+ "'"
             logging.info (item_name)
@@ -197,6 +202,11 @@ class SCM(DataSource):
             fn = os.path.join(destdir, filter_item.get_static_filename(SCM()))
             createJSON(agg, fn)
 
+            if filter_name in ("domain", "company", "repository"):
+                items_list['name'].append(item.replace('/', '_'))
+                items_list['commits_365'].append(agg['commits_365'])
+                items_list['authors_365'].append(agg['authors_365'])
+
             if (filter_name == "company"):
                 top_authors = SCM.get_top_data(startdate, enddate, identities_db, filter_item, npeople)
                 fn = os.path.join(destdir, filter_item.get_top_filename(SCM()))
@@ -206,6 +216,9 @@ class SCM(DataSource):
                 for i in [2006,2009,2012]:
                     data = company_top_authors_year(item_name, i, npeople)
                     createJSON(data, destdir+"/"+item+"-"+SCM.get_name()+"-top-authors_"+str(i)+".json")
+
+        fn = os.path.join(destdir, filter_.get_filename(SCM()))
+        createJSON(items_list, fn)
 
         if (filter_name == "company"):
             summary =  SCM.get_filter_summary(filter_, period, startdate, enddate, identities_db, 10)
@@ -242,9 +255,92 @@ class SCM(DataSource):
         vizr.ReportDemographicsBirthSCM(enddate, destdir, unique_ids)
 
     @staticmethod
+    def _remove_people(people_id):
+        # Remove from people
+        q = "DELETE FROM people_upeople WHERE people_id='%s'" % (people_id)
+        ExecuteQuery(q)
+        q = "DELETE FROM people WHERE id='%s'" % (people_id)
+        ExecuteQuery(q)
+
+    @staticmethod
+    def _remove_scmlog(scmlog_id):
+        # Get actions and remove mappings
+        q = "SELECT * from actions where commit_id='%s'" % (scmlog_id)
+        res = ExecuteQuery(q)
+        if 'id' in res:
+            if not isinstance(res['id'], list): res['id'] = [res['id']]
+            for action_id in res['id']:
+                # action_files is a view
+                # q = "DELETE FROM action_files WHERE action_id='%s'" % (action_id)
+                # ExecuteQuery(q)
+                q = "DELETE FROM file_copies WHERE action_id='%s'" % (action_id)
+                ExecuteQuery(q)
+        # actions_file_names is a VIEW
+        # q = "DELETE FROM actions_file_names WHERE commit_id='%s'" % (scmlog_id)
+        # ExecuteQuery(q)
+        q = "DELETE FROM commits_lines WHERE commit_id='%s'" % (scmlog_id)
+        ExecuteQuery(q)
+        q = "DELETE FROM file_links WHERE commit_id='%s'" % (scmlog_id)
+        ExecuteQuery(q)
+        q = "SELECT tag_id from tag_revisions WHERE commit_id='%s'" % (scmlog_id)
+        res = ExecuteQuery(q)
+        for tag_id in res['tag_id']:
+            q = "DELETE FROM tags WHERE id='%s'" % (tag_id)
+            ExecuteQuery(q)
+            q = "DELETE FROM tag_revisions WHERE tag_id='%s'" % (tag_id)
+            ExecuteQuery(q)
+        q = "DELETE FROM scmlog WHERE id='%s'" % (scmlog_id)
+        ExecuteQuery(q)
+
+    @staticmethod
     def remove_filter_data(filter_):
+        uri = filter_.get_item()
         logging.info("Removing SCM filter %s %s" % (filter_.get_name(),filter_.get_item()))
-        pass
+        q = "SELECT * from repositories WHERE uri='%s'" % (uri)
+        repo = ExecuteQuery(q)
+        if 'id' not in repo:
+            logging.error("%s not found" % (uri))
+            return
+        # Remove people
+        def get_people_one_repo(field):
+            return  """
+                SELECT %s FROM (SELECT COUNT(DISTINCT(repository_id)) AS total, %s
+                FROM scmlog
+                GROUP BY %s
+                HAVING total=1) t
+                """ % (field, field, field)
+        ## Remove committer_id that exists only in this repository
+        q = """
+            SELECT DISTINCT(committer_id) from scmlog
+            WHERE repository_id='%s' AND committer_id in (%s)
+        """  % (repo['id'],get_people_one_repo("committer_id"))
+        res = ExecuteQuery(q)
+        for people_id in res['committer_id']:
+            SCM._remove_people(people_id)
+        ## Remove author_id that exists only in this repository
+        q = """
+            SELECT DISTINCT(author_id) from scmlog
+            WHERE repository_id='%s' AND author_id in (%s)
+        """  % (repo['id'],get_people_one_repo("author_id"))
+        res = ExecuteQuery(q)
+        for people_id in res['author_id']:
+            SCM._remove_people(people_id)
+        # Remove people activity
+        q = "SELECT id from scmlog WHERE repository_id='%s'" % (repo['id'])
+        res = ExecuteQuery(q)
+        for scmlog_id in res['id']:
+            SCM._remove_scmlog(scmlog_id)
+        # Remove files
+        q = "SELECT id FROM files WHERE repository_id='%s'" % (repo['id'])
+        res = ExecuteQuery(q)
+        for file_id in res['id']:
+            q = "DELETE FROM file_types WHERE file_id='%s'" % (file_id)
+            ExecuteQuery(q)
+            q = "DELETE FROM files WHERE id='%s'" % (file_id)
+            ExecuteQuery(q)
+        # Remove filter
+        q = "DELETE from repositories WHERE id='%s'" % (repo['id'])
+        ExecuteQuery(q)
 
     @staticmethod
     def get_metrics_definition ():
@@ -385,14 +481,22 @@ def GetSCMStaticData (period, startdate, enddate, i_db, type_analysis):
     # avg_committer_period = StaticAvgCommitterPeriod(period, startdate, enddate, i_db, type_analysis)
     avg_files_author = StaticAvgFilesAuthor(period, startdate, enddate, i_db, type_analysis)
 
+    # Data from the last 365 days
+    fromdate = GetDates(enddate, 365)[1]
+    commits_365 = StaticNumCommits(period, fromdate, enddate, i_db, type_analysis)
+    authors_365 = StaticNumAuthors(period, fromdate, enddate, i_db, type_analysis)
+
     # 2- Merging information
     agg = dict(commits.items() + repositories.items() + committers.items())
     agg = dict(agg.items() + authors.items() + files.items() + actions.items())
     agg = dict(agg.items() + lines.items() + branches.items())
     agg = dict(agg.items() + avg_commits_period.items() + avg_files_period.items())
     agg = dict(agg.items() + avg_commits_author.items() + avg_files_author.items())
+    agg['commits_365'] = commits_365['commits']
+    agg['authors_365'] = authors_365['authors']
 
     return (agg)
+
 ##########
 # Specific FROM and WHERE clauses per type of report
 ##########
@@ -1644,6 +1748,20 @@ def company_top_authors (company_name, startdate, enddate, limit) :
         "group by u.id "+\
         "order by count(distinct(s.id)) desc "+\
         "limit " + limit
+
+    q = """
+        SELECT id, authors, commits FROM (
+        SELECT u.id AS id, u.identifier  AS authors, count(distinct(s.id)) AS commits
+        FROM people p,  scmlog s,  actions a, people_upeople pup, upeople u,
+             upeople_companies upc,  companies c
+        WHERE  s.id = a.commit_id AND p.id = s.author_id AND s.author_id = pup.people_id  AND
+          pup.upeople_id = upc.upeople_id AND pup.upeople_id = u.id AND  s.date >= upc.init AND
+          s.date < upc.end AND upc.company_id = c.id AND
+          s.date >=%s AND s.date < %s AND c.name =%s) t
+        GROUP BY id
+        ORDER BY COUNT(commits) DESC
+        LIMIT %s
+    """ % (startdate, enddate, company_name, limit)
 
     data = ExecuteQuery(q)
     return (data)

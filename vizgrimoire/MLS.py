@@ -26,11 +26,14 @@
 #       evolution and agg values of countries and companies
 #############
 
-import logging, os, re
+import logging
+import os
+import re
+import sys
 
 from GrimoireSQL import GetSQLGlobal, GetSQLPeriod
 from GrimoireSQL import ExecuteQuery, BuildQuery
-from GrimoireUtils import GetPercentageDiff, GetDates, completePeriodIds, getPeriod, createJSON
+from GrimoireUtils import GetPercentageDiff, GetDates, completePeriodIds, getPeriod, createJSON, get_subprojects
 
 from data_source import DataSource
 import report
@@ -167,6 +170,8 @@ class MLS(DataSource):
             items = countriesNames(identities_db, startdate, enddate)
         elif (filter_name == "domain"):
             items = domainsNames(identities_db, startdate, enddate)
+        elif (filter_name == "project"):
+            items = get_projects_mls_name(startdate, enddate, identities_db)
         else:
             logging.error(filter_name + " not supported")
         return items
@@ -196,6 +201,11 @@ class MLS(DataSource):
         fn = os.path.join(destdir, filter_.get_filename(MLS()))
         createJSON(items_files, fn)
 
+        if filter_name in ("domain", "company", "repository"):
+            items_list = {'name' : [], 'sent_365' : [], 'senders_365' : []}
+        else:
+            items_list = items
+
         for item in items :
             item_name = "'"+ item+ "'"
             logging.info (item_name)
@@ -210,8 +220,16 @@ class MLS(DataSource):
             fn = os.path.join(destdir, filter_item.get_static_filename(MLS()))
             createJSON(agg, fn)
 
+            if filter_name in ("domain", "company", "repository"):
+                items_list['name'].append(item.replace('/', '_').replace("<","__").replace(">","___"))
+                items_list['sent_365'].append(agg['sent_365'])
+                items_list['senders_365'].append(agg['senders_365'])
+
             top_senders = MLS.get_top_data(startdate, enddate, identities_db, filter_item, npeople)
             createJSON(top_senders, destdir+"/"+filter_item.get_top_filename(MLS()))
+
+        fn = os.path.join(destdir, filter_.get_filename(MLS()))
+        createJSON(items_list, fn)
 
         if (filter_name == "company"):
             sent = MLS.get_filter_summary(filter_, period, startdate, enddate, identities_db, 10)
@@ -383,6 +401,23 @@ def GetMLSSQLDomainsWhere (name) :
                 "d.name="+ name)
 
 
+def GetSQLProjectsFromMLS():
+    return (" , mailing_lists ml")
+
+
+def GetSQLProjectsWhereMLS(project, identities_db):
+    # include all repositories for a project and its subprojects
+    p = project.replace("'", "") # FIXME: why is "'" needed in the name?
+
+    repos = """and ml.mailing_list_url IN (
+           SELECT repository_name
+           FROM   %s.projects p, %s.project_repositories pr
+           WHERE  p.project_id = pr.project_id AND p.project_id IN (%s)
+               AND pr.data_source='mls'
+    )""" % (identities_db, identities_db, get_subprojects(p, identities_db))
+
+    return (repos  + " and ml.mailing_list_url = m.mailing_list_url")
+
 # Using senders only here!
 def GetMLSFiltersOwnUniqueIdsMLS  () :
     return ('m.message_ID = mp.message_id AND '+\
@@ -408,12 +443,12 @@ def GetMLSSQLReportFrom (identities_db, type_analysis):
     elif analysis == 'company': From = GetMLSSQLCompaniesFrom(identities_db)
     elif analysis == 'country': From = GetMLSSQLCountriesFrom(identities_db)
     elif analysis == 'domain': From = GetMLSSQLDomainsFrom(identities_db)
+    elif analysis == 'project': From = GetSQLProjectsFromMLS()
 
     return (From)
 
 
-
-def GetMLSSQLReportWhere (type_analysis):
+def GetMLSSQLReportWhere (type_analysis, identities_db=None):
     #generic function to generate 'where' clauses
     #"type" is a list of two values: type of analysis and value of 
     #such analysis
@@ -429,6 +464,12 @@ def GetMLSSQLReportWhere (type_analysis):
     elif analysis == 'company': where = GetMLSSQLCompaniesWhere(value)
     elif analysis == 'country': where = GetMLSSQLCountriesWhere(value)
     elif analysis == 'domain': where = GetMLSSQLDomainsWhere(value)
+    elif analysis == 'project':
+        if (identities_db is None):
+            logging.error("project filter not supported without identities_db")
+            sys.exit(0)
+        else:
+            where = GetSQLProjectsWhereMLS(value, identities_db)
 
     return (where)
 
@@ -436,6 +477,37 @@ def GetMLSSQLReportWhere (type_analysis):
 #########
 # Other generic functions
 #########
+
+def get_projects_mls_name(startdate, enddate, identities_db, limit=0):
+    # Projects activity needs to include subprojects also
+    logging.info ("Getting projects list for MLS")
+
+    # Get all projects list
+    q = "SELECT p.id AS name FROM  %s.projects p" % (identities_db)
+    projects = ExecuteQuery(q)
+    data = []
+
+    # Loop all projects getting reviews
+    for project in projects['name']:
+        type_analysis = ['project', project]
+        period = None
+        evol = False
+
+        sent = GetEmailsSent(period, startdate, enddate, identities_db,
+                             type_analysis, evol)
+
+        sent = sent['sent']
+        if (sent > 0):
+            data.append([sent,project])
+
+    # Order the list using reviews: https://wiki.python.org/moin/HowTo/Sorting
+    from operator import itemgetter
+    data_sort = sorted(data, key=itemgetter(0),reverse=True)
+    names = [name[1] for name in data_sort]
+
+    if (limit > 0): names = names[:limit]
+    return names
+
 
 def reposField () :
     # Depending on the mailing list, the field to be
@@ -485,6 +557,13 @@ def GetMLSInfo (period, startdate, enddate, identities_db, rfield, type_analysis
         senders_response = AggMLSSendersResponse(period, startdate, enddate, identities_db, type_analysis)
         senders_init = AggMLSSendersInit(period, startdate, enddate, identities_db, type_analysis)
 
+        # Data from the last 365 days
+        fromdate = GetDates(enddate, 365)[1]
+        sent_365 = AggEmailsSent(period, fromdate, enddate, identities_db, type_analysis)
+        senders_365 = AggMLSSenders(period, fromdate, enddate, identities_db, type_analysis)
+        sent['sent_365'] = sent_365['sent']
+        senders['senders_365'] = senders_365['senders']
+
     data = dict(sent.items() + senders.items()+ repositories.items())
     data = dict(data.items() + threads.items()+ sent_response.items())
     data = dict(data.items() + senders_response.items() + senders_init.items())
@@ -525,7 +604,7 @@ def GetEmailsSent (period, startdate, enddate, identities_db, type_analysis, evo
                   " DATE_FORMAT (max(m.first_date), '%Y-%m-%d') as last_date "
 
     tables = " messages m " + GetMLSSQLReportFrom(identities_db, type_analysis)
-    filters = GetMLSSQLReportWhere(type_analysis)
+    filters = GetMLSSQLReportWhere(type_analysis, identities_db)
 
     q = BuildQuery(period, startdate, enddate, " m.first_date ", fields, tables, filters, evolutionary)
     return(ExecuteQuery(q))
@@ -552,9 +631,9 @@ def GetMLSSenders (period, startdate, enddate, identities_db, type_analysis, evo
         filters = GetMLSFiltersOwnUniqueIdsMLS()
     else:
         #not sure if this line is useful anymore...
-        filters = GetMLSSQLReportWhere(type_analysis)
+        filters = GetMLSSQLReportWhere(type_analysis, identities_db)
 
-    if (type_analysis and type_analysis[0] == "repository"):
+    if (type_analysis and type_analysis[0] in ("repository", "project")):
         #Adding people_upeople table
         tables += ",  messages_people mp, people_upeople pup "
         filters += " and m.message_ID = mp.message_id and "+\
@@ -608,9 +687,9 @@ def GetMLSSendersResponse (period, startdate, enddate, identities_db, type_analy
         tables += ", messages_people mp, people_upeople pup "
         filters = GetMLSFiltersOwnUniqueIdsMLS()
     else:
-        filters = GetMLSSQLReportWhere(type_analysis)
+        filters = GetMLSSQLReportWhere(type_analysis, identities_db)
 
-    if (type_analysis and type_analysis[0] == "repository"):
+    if (type_analysis and type_analysis[0] in ("repository", "project")):
         #Adding people_upeople table
         tables += ",  messages_people mp, people_upeople pup "
         filters += " and m.message_ID = mp.message_id and "+\
@@ -644,9 +723,9 @@ def GetMLSSendersInit (period, startdate, enddate, identities_db, type_analysis,
         tables += ", messages_people mp, people_upeople pup "
         filters = GetMLSFiltersOwnUniqueIdsMLS()
     else:
-        filters = GetMLSSQLReportWhere(type_analysis)
+        filters = GetMLSSQLReportWhere(type_analysis, identities_db)
 
-    if (type_analysis and type_analysis[0] == "repository"):
+    if (type_analysis and type_analysis[0] in ("repository", "project")):
         #Adding people_upeople table
         tables += ",  messages_people mp, people_upeople pup "
         filters += " and m.message_ID = mp.message_id and "+\
@@ -673,7 +752,7 @@ def GetThreads (period, startdate, enddate, identities_db, type_analysis, evolut
 
     fields = " count(distinct(m.is_response_of)) as threads"
     tables = " messages m " + GetMLSSQLReportFrom(identities_db, type_analysis)
-    filters = GetMLSSQLReportWhere(type_analysis)
+    filters = GetMLSSQLReportWhere(type_analysis, identities_db)
 
     q = BuildQuery(period, startdate, enddate, " m.first_date ", fields, tables, filters, evolutionary)
     return(ExecuteQuery(q))
@@ -694,7 +773,7 @@ def GetMLSRepositories (rfield, period, startdate, enddate, identities_db, type_
 
     fields = " COUNT(DISTINCT(m."+rfield+")) AS repositories  "
     tables = " messages m " + GetMLSSQLReportFrom(identities_db, type_analysis)
-    filters = GetMLSSQLReportWhere(type_analysis)
+    filters = GetMLSSQLReportWhere(type_analysis, identities_db)
 
     q = BuildQuery(period, startdate, enddate, " m.first_date ", fields, tables, filters, evolutionary)
     return(ExecuteQuery(q))
@@ -715,7 +794,7 @@ def GetMLSResponses (period, startdate, enddate, identities_db, type_analysis, e
 
     fields = " count(distinct(m.message_ID)) as sent_response"
     tables = " messages m " + GetMLSSQLReportFrom(identities_db, type_analysis)
-    filters = GetMLSSQLReportWhere(type_analysis) + " and m.is_response_of is not null "
+    filters = GetMLSSQLReportWhere(type_analysis, identities_db) + " and m.is_response_of is not null "
 
     q = BuildQuery(period, startdate, enddate, " m.first_date ", fields, tables, filters, evolutionary)
     return(ExecuteQuery(q))
@@ -734,7 +813,7 @@ def GetMLSInit (period, startdate, enddate, identities_db, type_analysis, evolut
 
     fields = " count(distinct(m.message_ID)) as sent_init"
     tables = " messages m " + GetMLSSQLReportFrom(identities_db, type_analysis)
-    filters = GetMLSSQLReportWhere(type_analysis) + " m.is_response_of is null "
+    filters = GetMLSSQLReportWhere(type_analysis, identities_db) + " m.is_response_of is null "
 
     q = BuildQuery(period, startdate, enddate, " m.first_date ", fields, tables, filters, evolutionary)
     return(ExecuteQuery(q))
@@ -754,7 +833,7 @@ def GetMLSStudies (period, startdate, enddate, identities_db, type_analysis, evo
 
     fields = ' count(distinct(name)) as ' + study
     tables = " messages m " + GetMLSSQLReportFrom(identities_db, type_analysis)
-    filters = GetMLSSQLReportWhere(type_analysis) + " and m.is_response_of is null "
+    filters = GetMLSSQLReportWhere(type_analysis, identities_db) + " and m.is_response_of is null "
 
     #Filtering last part of the query, not used in this case
     #filters = gsub("and\n( )+(d|c|cou|com).name =.*$", "", filters)
@@ -1081,6 +1160,7 @@ def domainTopSenders (domain_name, identities_db, startdate, enddate, limit):
         "ORDER BY COUNT(DISTINCT(m.message_ID)) DESC LIMIT "+ limit
     data = ExecuteQuery(q)
     return (data)
+
 
 #######################
 # Functions to analyze last activity
