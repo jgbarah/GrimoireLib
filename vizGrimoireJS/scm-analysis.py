@@ -31,6 +31,7 @@
 #                                                -o ../../../json -r people,repositories
 #
 
+from optparse import OptionParser
 import logging
 from rpy2.robjects.packages import importr
 import sys
@@ -43,6 +44,85 @@ from GrimoireUtils import dataFrame2Dict, createJSON, completePeriodIds
 from GrimoireUtils import valRtoPython, getPeriod
 import SCM
 from utils import read_options
+
+def read_options():
+    # Generic function used by report_tool.py and other tools to analyze the
+    # information in databases. This contains a list of command line options
+
+    parser = OptionParser(usage="usage: %prog [options]",
+                          version="%prog 0.1")
+    parser.add_option("-d", "--database",
+                      action="store",
+                      dest="dbname",
+                      help="Database where information is stored")
+    parser.add_option("-u","--dbuser",
+                      action="store",
+                      dest="dbuser",
+                      default="root",
+                      help="Database user")
+    parser.add_option("-p","--dbpassword",
+                      action="store",
+                      dest="dbpassword",
+                      default="",
+                      help="Database password")
+    parser.add_option("-g", "--granularity",
+                      action="store",
+                      dest="granularity",
+                      default="months",
+                      help="year,months,weeks granularity")
+    parser.add_option("-o", "--destination",
+                      action="store",
+                      dest="destdir",
+                      default="data/json",
+                      help="Destination directory for JSON files")
+    parser.add_option("-r", "--reports",
+                      action="store",
+                      dest="reports",
+                      default="",
+                      help="Reports to be generated (repositories, companies, countries, people)")
+    parser.add_option("-s", "--start",
+                      action="store",
+                      dest="startdate",
+                      default="1900-01-01",
+                      help="Start date for the report")
+    parser.add_option("-e", "--end",
+                      action="store",
+                      dest="enddate",
+                      default="2100-01-01",
+                      help="End date for the report")
+    parser.add_option("-i", "--identities",
+                      action="store",
+                      dest="identities_db",
+                      help="Database with unique identities and affiliations")
+    parser.add_option("--npeople",
+                      action="store",
+                      dest="npeople",
+                      default="10",
+                      help="Limit for people analysis")
+    parser.add_option("-c", "--config-file",
+                      action="store",
+                      dest="config_file",
+                      help="Automator config file")
+    parser.add_option("--data-source",
+                      action="store",
+                      dest="data_source",
+                      help="data source to be generated")
+    parser.add_option("--filter",
+                      action="store",
+                      dest="filter",
+                      help="filter to be generated")
+
+
+    (opts, args) = parser.parse_args()
+
+    if len(args) != 0:
+        parser.error("Wrong number of arguments")
+
+    if opts.config_file is None :
+        if not(opts.dbname and opts.dbuser and opts.identities_db):
+            parser.error("--database --db-user and --identities are needed")
+    return opts
+
 
 def aggData(period, startdate, enddate, identities_db, destdir):
     data = SCM.GetSCMStaticData(period, startdate, enddate, identities_db, None)
