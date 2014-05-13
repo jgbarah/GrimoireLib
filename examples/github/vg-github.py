@@ -501,7 +501,7 @@ def run_analysis (scripts, base_dbs, id_dbs, outdir):
         os.environ.get("PYTHONPATH", "")
     env["LANG"] = ""
     for script, base_db, id_db in zip (scripts, base_dbs, id_dbs):
-        check_call_list = [script, "-d", base_db,
+        call_list = [script, "-d", base_db,
                      "--dbuser", args.user, "--dbpassword", args.passwd,
                      "-i", id_db,
                      "--granularity", "weeks",
