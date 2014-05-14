@@ -372,38 +372,55 @@ def create_dir (dir):
             raise
 
 
-def install_vizgrimoirer (libdir, vizgrimoirer_pkgdir):
+def install_vizgrimoirer (libdir, pkgdir):
     """Install the appropriate vizgrimore R package in a specific location
 
-    - libdir: directory to install R libraries
-    - vizgrimoirer_pkgdir: directory with the source code for the
-        VizGrimoireR R package
-
-    Installing the package to ensure it is properly installed,
+    Installs the package to ensure it is properly installed,
     even if it is not available from the standard R librdirs,
     or the version there is not the right one.
-    Installs R dependencias, only if libdir is created.
+
+    Parameters
+    ----------
+
+    libdir: directory to install R libraries
+    pkgdir: directory with the source code for the
+        VizGrimoireR R package
+
+    Returns
+    -------
+
+    None
 
     """
 
     env = os.environ.copy()
     env ["R_LIBS"] = libdir
-    check_call (["R", "CMD", "INSTALL", vizgrimoirer_pkgdir], env=env)
+    check_call (["R", "CMD", "INSTALL", pkgdir], env=env)
 
-def install_rdepend (libdir, vizgrimoirer_pkgdir):
+def install_rdepend (libdir, vizgrimoirer):
     """Install R dependencies in a specific location
 
-    - libdir: directory to install R libraries
-    - vizgrimoirer_pkgdir: directory with the source code for the
+    Installs R dependencies, obtained by reading the DESCRIPTION
+    file in the source package for VizGrimoire R.
+
+    Parameters
+    ----------
+
+    libdir: string
+        Path of directory to install R libraries
+    vizgrimoirer: string
+        Path of directory with the source code for the
         VizGrimoireR R package
 
-    Installing R dependencies, obtained by reading the DESCRIPTION
-    file in the source package for VizGrimoire R.
+    Returns
+    -------
+
+    None
 
     """
 
     # Extract dependant R packages from Depends line in DESCRIPTION
-    descFile = open(vizgrimoirer_pkgdir + "/DESCRIPTION")
+    descFile = open(vizgrimoirer + "/DESCRIPTION")
     lines = descFile.readlines()
     for line in lines:
         (field, content) = line.split(":")
@@ -429,11 +446,22 @@ def install_rdepend (libdir, vizgrimoirer_pkgdir):
     p.communicate(rcode)
 
 def install_pdepend (libdir, libs):
-    """Install R dependencies in a specific location
+    """Install Python dependencies in a specific location
 
-    - libdir: directory to install Python libraries
+    Installs Python dependencies, using pip
 
-    Installing Python dependencies, using pip
+    Parameters
+    ----------
+
+    libdir: string
+        Path of directory to install Python libraries
+    libs: list of string
+        List of names of the libraries to install from pip
+
+    Returns
+    -------
+
+    None
 
     """
 
