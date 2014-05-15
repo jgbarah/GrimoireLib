@@ -43,7 +43,7 @@ Example of how to produce a dashboard for all repositories owned by
 organization MetricsGrimoire:
 
 vg-github.py --user jgb --passwd XXX --dir ~/dashboard --removedb
- --ghuser ghuser --ghpasswd XXX MetricsGrimoire VizGrimoire
+ --ghuser ghuser --ghpasswd XXX --name Grimoire MetricsGrimoire VizGrimoire
 
 """
 
