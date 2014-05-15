@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>build_dashboard module &mdash; GrimoireLib GitHub Example 1.0 documentation</title>
+    <title>build_dashboard module &mdash; GrimoreLib 1.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -23,9 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="GrimoireLib GitHub Example 1.0 documentation" href="index.html" />
-    <link rel="up" title="&lt;no title&gt;" href="modules.html" />
-    <link rel="prev" title="&lt;no title&gt;" href="modules.html" /> 
+    <link rel="top" title="GrimoreLib 1.0 documentation" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -40,11 +38,7 @@
         <li class="right" >
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="modules.html" title="&lt;no title&gt;"
-             accesskey="P">previous</a> |</li>
-        <li><a href="index.html">GrimoireLib GitHub Example 1.0 documentation</a> &raquo;</li>
-          <li><a href="modules.html" accesskey="U">&lt;no title&gt;</a> &raquo;</li> 
+        <li><a href="index.html">GrimoreLib 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -76,7 +70,7 @@ organization MetricsGrimoire:</p>
 </dl>
 <dl class="class">
 <dt id="build_dashboard.DBConf">
-<em class="property">class </em><tt class="descclassname">build_dashboard.</tt><tt class="descname">DBConf</tt><big>(</big><em>name</em>, <em>host='localhost'</em>, <em>port=None</em>, <em>user=None</em>, <em>passwd=None</em><big>)</big><a class="headerlink" href="#build_dashboard.DBConf" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">build_dashboard.</tt><tt class="descname">DBConf</tt><big>(</big><em>name</em>, <em>host='localhost'</em>, <em>port=None</em>, <em>user=None</em>, <em>passwd=None</em><big>)</big><a class="reference internal" href="_modules/build_dashboard.html#DBConf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#build_dashboard.DBConf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configuration for a MySQL database.</p>
 <p>Includes information to access the database, such as MySQL user name,
 password for that user, etc.</p>
@@ -134,7 +128,7 @@ password for that user, etc.</p>
 </table>
 <dl class="method">
 <dt id="build_dashboard.DBConf.connect">
-<tt class="descname">connect</tt><big>(</big><big>)</big><a class="headerlink" href="#build_dashboard.DBConf.connect" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">connect</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/build_dashboard.html#DBConf.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#build_dashboard.DBConf.connect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a dictionary with parameters needed by MySQLdb.connect().</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -155,7 +149,7 @@ Those are: &#8216;host&#8217;, &#8216;port&#8217;, &#8216;user&#8217;, &#8216;pa
 
 <dl class="function">
 <dt id="build_dashboard.affiliation">
-<tt class="descclassname">build_dashboard.</tt><tt class="descname">affiliation</tt><big>(</big><em>dbprefix</em><big>)</big><a class="headerlink" href="#build_dashboard.affiliation" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">affiliation</tt><big>(</big><em>dbprefix</em><big>)</big><a class="reference internal" href="_modules/build_dashboard.html#affiliation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#build_dashboard.affiliation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run affiliation stuff</p>
 <ul class="simple">
 <li>dbprefix: prefix for the databases</li>
@@ -164,7 +158,7 @@ Those are: &#8216;host&#8217;, &#8216;port&#8217;, &#8216;user&#8217;, &#8216;pa
 
 <dl class="function">
 <dt id="build_dashboard.clone_repos">
-<tt class="descclassname">build_dashboard.</tt><tt class="descname">clone_repos</tt><big>(</big><em>dir</em>, <em>repos</em><big>)</big><a class="headerlink" href="#build_dashboard.clone_repos" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">clone_repos</tt><big>(</big><em>dir</em>, <em>repos</em><big>)</big><a class="reference internal" href="_modules/build_dashboard.html#clone_repos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#build_dashboard.clone_repos" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clone under local directory dir, from the specified git repos.</p>
 <p>Clone locally the repos if corresponding subdirectories don&#8217;t exist,
 or pull from them if they exist.
@@ -197,7 +191,7 @@ used as subdir names, values are repo urls.</p>
 
 <dl class="function">
 <dt id="build_dashboard.create_dir">
-<tt class="descclassname">build_dashboard.</tt><tt class="descname">create_dir</tt><big>(</big><em>dir</em><big>)</big><a class="headerlink" href="#build_dashboard.create_dir" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">create_dir</tt><big>(</big><em>dir</em><big>)</big><a class="reference internal" href="_modules/build_dashboard.html#create_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#build_dashboard.create_dir" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create dir directory, including subdirectories if needed.</p>
 <p>Do nothing if dir directory already exists. Raise exception if
 the path existis, but it is not a directory.</p>
@@ -217,7 +211,7 @@ the path existis, but it is not a directory.</p>
 
 <dl class="function">
 <dt id="build_dashboard.find_repos">
-<tt class="descclassname">build_dashboard.</tt><tt class="descname">find_repos</tt><big>(</big><em>user</em><big>)</big><a class="headerlink" href="#build_dashboard.find_repos" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">find_repos</tt><big>(</big><em>user</em><big>)</big><a class="reference internal" href="_modules/build_dashboard.html#find_repos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#build_dashboard.find_repos" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find the repos for a GitHub user or organization.</p>
 <p>Gets a list of the repositories (projects) owned by a GitHub
 user or organization, by querying the GitHub REST API.</p>
@@ -243,7 +237,7 @@ user or organization, by querying the GitHub REST API.</p>
 
 <dl class="function">
 <dt id="build_dashboard.install_pdepend">
-<tt class="descclassname">build_dashboard.</tt><tt class="descname">install_pdepend</tt><big>(</big><em>libdir</em>, <em>libs</em><big>)</big><a class="headerlink" href="#build_dashboard.install_pdepend" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">install_pdepend</tt><big>(</big><em>libdir</em>, <em>libs</em><big>)</big><a class="reference internal" href="_modules/build_dashboard.html#install_pdepend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#build_dashboard.install_pdepend" title="Permalink to this definition">¶</a></dt>
 <dd><p>Install Python dependencies in a specific location</p>
 <p>Installs Python dependencies, using pip</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -269,7 +263,7 @@ user or organization, by querying the GitHub REST API.</p>
 
 <dl class="function">
 <dt id="build_dashboard.install_rdepend">
-<tt class="descclassname">build_dashboard.</tt><tt class="descname">install_rdepend</tt><big>(</big><em>libdir</em>, <em>vizgrimoirer</em><big>)</big><a class="headerlink" href="#build_dashboard.install_rdepend" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">install_rdepend</tt><big>(</big><em>libdir</em>, <em>vizgrimoirer</em><big>)</big><a class="reference internal" href="_modules/build_dashboard.html#install_rdepend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#build_dashboard.install_rdepend" title="Permalink to this definition">¶</a></dt>
 <dd><p>Install R dependencies in a specific location</p>
 <p>Installs R dependencies, obtained by reading the DESCRIPTION
 file in the source package for VizGrimoire R.</p>
@@ -297,7 +291,7 @@ VizGrimoireR R package</p>
 
 <dl class="function">
 <dt id="build_dashboard.install_vizgrimoirer">
-<tt class="descclassname">build_dashboard.</tt><tt class="descname">install_vizgrimoirer</tt><big>(</big><em>libdir</em>, <em>pkgdir</em><big>)</big><a class="headerlink" href="#build_dashboard.install_vizgrimoirer" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">install_vizgrimoirer</tt><big>(</big><em>libdir</em>, <em>pkgdir</em><big>)</big><a class="reference internal" href="_modules/build_dashboard.html#install_vizgrimoirer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#build_dashboard.install_vizgrimoirer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Install the appropriate vizgrimore R package in a specific location</p>
 <p>Installs the package to ensure it is properly installed,
 even if it is not available from the standard R librdirs,
@@ -322,7 +316,7 @@ or the version there is not the right one.</p>
 
 <dl class="function">
 <dt id="build_dashboard.produce_config">
-<tt class="descclassname">build_dashboard.</tt><tt class="descname">produce_config</tt><big>(</big><em>config_template</em>, <em>config_file</em><big>)</big><a class="headerlink" href="#build_dashboard.produce_config" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">produce_config</tt><big>(</big><em>config_template</em>, <em>config_file</em><big>)</big><a class="reference internal" href="_modules/build_dashboard.html#produce_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#build_dashboard.produce_config" title="Permalink to this definition">¶</a></dt>
 <dd><p>Produce a config.json file by translating a template file.</p>
 <ul class="simple">
 <li>config_template: template for config.json (filename)</li>
@@ -332,7 +326,7 @@ or the version there is not the right one.</p>
 
 <dl class="function">
 <dt id="build_dashboard.produce_dashboard">
-<tt class="descclassname">build_dashboard.</tt><tt class="descname">produce_dashboard</tt><big>(</big><em>vizgrimoirejs_dir</em>, <em>example_dir</em>, <em>dashboard_dir</em>, <em>json_dir</em><big>)</big><a class="headerlink" href="#build_dashboard.produce_dashboard" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">produce_dashboard</tt><big>(</big><em>vizgrimoirejs_dir</em>, <em>example_dir</em>, <em>dashboard_dir</em>, <em>json_dir</em><big>)</big><a class="reference internal" href="_modules/build_dashboard.html#produce_dashboard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#build_dashboard.produce_dashboard" title="Permalink to this definition">¶</a></dt>
 <dd><p>Produce an HTML dashboard for the JSON files</p>
 <ul class="simple">
 <li>vizgrimoirejs_dir: dir with the source for VizGrimoireJS</li>
@@ -346,7 +340,7 @@ analysis scripts.</p>
 
 <dl class="function">
 <dt id="build_dashboard.run_analysis">
-<tt class="descclassname">build_dashboard.</tt><tt class="descname">run_analysis</tt><big>(</big><em>scripts</em>, <em>base_dbs</em>, <em>id_dbs</em>, <em>outdir</em><big>)</big><a class="headerlink" href="#build_dashboard.run_analysis" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">run_analysis</tt><big>(</big><em>scripts</em>, <em>base_dbs</em>, <em>id_dbs</em>, <em>outdir</em><big>)</big><a class="reference internal" href="_modules/build_dashboard.html#run_analysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#build_dashboard.run_analysis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run analysis scripts</p>
 <ul class="simple">
 <li>scripts: scripts to run (list)</li>
@@ -360,7 +354,7 @@ analysis scripts.</p>
 
 <dl class="function">
 <dt id="build_dashboard.run_mgtool">
-<tt class="descclassname">build_dashboard.</tt><tt class="descname">run_mgtool</tt><big>(</big><em>tool</em>, <em>project</em>, <em>db_conf</em>, <em>mg_dir</em>, <em>tool_conf</em><big>)</big><a class="headerlink" href="#build_dashboard.run_mgtool" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">run_mgtool</tt><big>(</big><em>tool</em>, <em>project</em>, <em>db_conf</em>, <em>mg_dir</em>, <em>tool_conf</em><big>)</big><a class="reference internal" href="_modules/build_dashboard.html#run_mgtool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#build_dashboard.run_mgtool" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run MetricsGrimoire tool.</p>
 <p>Run a MetricsGrimoire tool to extract data from project, and
 store it in dbname.</p>
@@ -408,7 +402,7 @@ store it in dbname.</p>
 
 <dl class="function">
 <dt id="build_dashboard.run_mgtools">
-<tt class="descclassname">build_dashboard.</tt><tt class="descname">run_mgtools</tt><big>(</big><em>tools</em>, <em>projects</em>, <em>db_conf</em>, <em>db_remove</em><big>)</big><a class="headerlink" href="#build_dashboard.run_mgtools" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">run_mgtools</tt><big>(</big><em>tools</em>, <em>projects</em>, <em>db_conf</em>, <em>db_remove</em><big>)</big><a class="reference internal" href="_modules/build_dashboard.html#run_mgtools"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#build_dashboard.run_mgtools" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run MetricsGrimoire tools</p>
 <p>Run the specified MetricsGrimoire tools for the specified
 GitHub projects, preparing the corresponding databases if needed</p>
@@ -450,7 +444,7 @@ db_conf = DBConf (name = &#8216;mg&#8217;, user = &#8216;jgb&#8217;, passwd = &#
 
 <dl class="function">
 <dt id="build_dashboard.unique_ids">
-<tt class="descclassname">build_dashboard.</tt><tt class="descname">unique_ids</tt><big>(</big><em>dbprefix</em><big>)</big><a class="headerlink" href="#build_dashboard.unique_ids" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">unique_ids</tt><big>(</big><em>dbprefix</em><big>)</big><a class="reference internal" href="_modules/build_dashboard.html#unique_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#build_dashboard.unique_ids" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run unique identities stuff</p>
 <ul class="simple">
 <li>dbprefix: prefix for the databases</li>
@@ -465,9 +459,6 @@ db_conf = DBConf (name = &#8216;mg&#8217;, user = &#8216;jgb&#8217;, passwd = &#
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="modules.html"
-                        title="previous chapter">&lt;no title&gt;</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/build_dashboard.txt"
@@ -502,15 +493,11 @@ db_conf = DBConf (name = &#8216;mg&#8217;, user = &#8216;jgb&#8217;, passwd = &#
         <li class="right" >
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="modules.html" title="&lt;no title&gt;"
-             >previous</a> |</li>
-        <li><a href="index.html">GrimoireLib GitHub Example 1.0 documentation</a> &raquo;</li>
-          <li><a href="modules.html" >&lt;no title&gt;</a> &raquo;</li> 
+        <li><a href="index.html">GrimoreLib 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2014, Jesus M. Gonzalez Barahona.
+        &copy; Copyright 2014, Bitergia.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>

@@ -1,0 +1,619 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>vizgrimoire.IRC &mdash; GrimoreLib 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="GrimoreLib 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">GrimoreLib 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for vizgrimoire.IRC</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+
+<span class="c"># Copyright (C) 2014 Bitergia</span>
+<span class="c"># </span>
+<span class="c"># This program is free software; you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation; either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># This program is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with this program; if not, write to the Free Software</span>
+<span class="c"># Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.</span>
+<span class="c">#</span>
+<span class="c"># This file is a part of the vizGrimoire.R package</span>
+<span class="c">#</span>
+<span class="c"># Authors:</span>
+<span class="c">#     Alvaro del Castillo &lt;acs@bitergia.com&gt;</span>
+<span class="c">#     Daniel Izquierdo &lt;dizquierdo@bitergia.com&gt;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span><span class="o">,</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">GrimoireSQL</span> <span class="kn">import</span> <span class="n">GetSQLGlobal</span><span class="p">,</span> <span class="n">GetSQLPeriod</span><span class="p">,</span> <span class="n">ExecuteQuery</span><span class="p">,</span> <span class="n">BuildQuery</span>
+<span class="kn">from</span> <span class="nn">GrimoireUtils</span> <span class="kn">import</span> <span class="n">GetPercentageDiff</span><span class="p">,</span> <span class="n">GetDates</span><span class="p">,</span> <span class="n">getPeriod</span><span class="p">,</span> <span class="n">createJSON</span><span class="p">,</span> <span class="n">completePeriodIds</span>
+<span class="kn">from</span> <span class="nn">data_source</span> <span class="kn">import</span> <span class="n">DataSource</span>
+<span class="kn">from</span> <span class="nn">filter</span> <span class="kn">import</span> <span class="n">Filter</span>
+
+
+<div class="viewcode-block" id="IRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.IRC">[docs]</a><span class="k">class</span> <span class="nc">IRC</span><span class="p">(</span><span class="n">DataSource</span><span class="p">):</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="IRC.get_db_name"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.IRC.get_db_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_db_name</span><span class="p">():</span>
+        <span class="k">return</span> <span class="s">&quot;db_irc&quot;</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="IRC.get_name"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.IRC.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">():</span> <span class="k">return</span> <span class="s">&quot;irc&quot;</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="IRC.get_evolutionary_data"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.IRC.get_evolutionary_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_evolutionary_data</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">filter_</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">evol</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">filter_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">type_analysis</span> <span class="o">=</span> <span class="p">[</span><span class="n">filter_</span><span class="o">.</span><span class="n">get_name</span><span class="p">(),</span> <span class="n">filter_</span><span class="o">.</span><span class="n">get_item</span><span class="p">()]</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">filter_</span> <span class="o">==</span> <span class="s">&quot;repository&quot;</span><span class="p">):</span>
+                <span class="c"># evol = GetRepoEvolSentSendersIRC(filter_.get_item(), period, startdate, enddate)</span>
+                <span class="n">evol</span> <span class="o">=</span> <span class="n">GetEvolDataIRC</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">)</span>
+                <span class="n">evol</span> <span class="o">=</span> <span class="n">completePeriodIds</span><span class="p">(</span><span class="n">evol</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">evol</span> <span class="o">=</span> <span class="n">GetEvolDataIRC</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="n">evol</span> <span class="o">=</span> <span class="n">completePeriodIds</span><span class="p">(</span><span class="n">evol</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">evol</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="IRC.create_evolutionary_report"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.IRC.create_evolutionary_report">[docs]</a>    <span class="k">def</span> <span class="nf">create_evolutionary_report</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">destdir</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">filter_</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span>  <span class="n">IRC</span><span class="o">.</span><span class="n">get_evolutionary_data</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">filter_</span><span class="p">)</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">IRC</span><span class="p">()</span><span class="o">.</span><span class="n">get_evolutionary_filename</span><span class="p">()</span>
+        <span class="n">createJSON</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">destdir</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="IRC.get_agg_data"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.IRC.get_agg_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_agg_data</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">filter_</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">agg_data</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">filter_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">filter_name</span> <span class="o">=</span> <span class="n">filter_</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">filter_</span><span class="o">.</span><span class="n">get_item</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">filter_name</span> <span class="o">==</span> <span class="s">&quot;repository&quot;</span><span class="p">):</span>
+                <span class="n">agg_data</span> <span class="o">=</span> <span class="n">GetRepoStaticSentSendersIRC</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># Tendencies</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">30</span><span class="p">,</span><span class="mi">365</span><span class="p">]:</span>
+                <span class="n">period_data</span> <span class="o">=</span> <span class="n">GetIRCDiffSentDays</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="n">agg_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">agg_data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="o">+</span> <span class="n">period_data</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+                <span class="n">period_data</span> <span class="o">=</span> <span class="n">GetIRCDiffSendersDays</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="n">agg_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">agg_data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="o">+</span> <span class="n">period_data</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+            <span class="n">static_data</span> <span class="o">=</span> <span class="n">GetStaticDataIRC</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="n">agg_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">agg_data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="o">+</span> <span class="n">static_data</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">agg_data</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="IRC.create_agg_report"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.IRC.create_agg_report">[docs]</a>    <span class="k">def</span> <span class="nf">create_agg_report</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">destdir</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="n">filter_</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">IRC</span><span class="o">.</span><span class="n">get_agg_data</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="n">filter_</span><span class="p">)</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">IRC</span><span class="p">()</span><span class="o">.</span><span class="n">get_agg_filename</span><span class="p">()</span>
+        <span class="n">createJSON</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">destdir</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="IRC.get_top_data"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.IRC.get_top_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_top_data</span> <span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">filter_</span><span class="p">,</span> <span class="n">npeople</span><span class="p">):</span>
+        <span class="n">bots</span> <span class="o">=</span> <span class="n">IRC</span><span class="o">.</span><span class="n">get_bots</span><span class="p">()</span>
+
+        <span class="n">top_senders</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">top_senders</span><span class="p">[</span><span class="s">&#39;senders.&#39;</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">GetTopSendersIRC</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">bots</span><span class="p">,</span> <span class="n">npeople</span><span class="p">)</span>
+        <span class="n">top_senders</span><span class="p">[</span><span class="s">&#39;senders.last year&#39;</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">GetTopSendersIRC</span><span class="p">(</span><span class="mi">365</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">bots</span><span class="p">,</span> <span class="n">npeople</span><span class="p">)</span>
+        <span class="n">top_senders</span><span class="p">[</span><span class="s">&#39;senders.last month&#39;</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">GetTopSendersIRC</span><span class="p">(</span><span class="mi">31</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">bots</span><span class="p">,</span> <span class="n">npeople</span><span class="p">)</span>
+
+        <span class="k">return</span><span class="p">(</span><span class="n">top_senders</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="IRC.create_top_report"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.IRC.create_top_report">[docs]</a>    <span class="k">def</span> <span class="nf">create_top_report</span> <span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">destdir</span><span class="p">,</span> <span class="n">npeople</span><span class="p">,</span> <span class="n">i_db</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">IRC</span><span class="o">.</span><span class="n">get_top_data</span> <span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">npeople</span><span class="p">)</span>
+        <span class="n">top_file</span> <span class="o">=</span> <span class="n">destdir</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">IRC</span><span class="p">()</span><span class="o">.</span><span class="n">get_top_filename</span><span class="p">()</span>
+        <span class="n">createJSON</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">top_file</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="IRC.get_filter_items"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.IRC.get_filter_items">[docs]</a>    <span class="k">def</span> <span class="nf">get_filter_items</span><span class="p">(</span><span class="n">filter_</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">bots</span><span class="p">):</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">filter_name</span> <span class="o">=</span> <span class="n">filter_</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">filter_name</span> <span class="o">==</span> <span class="s">&quot;repository&quot;</span><span class="p">):</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="n">GetReposNameIRC</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;IRC &quot;</span> <span class="o">+</span> <span class="n">filter_name</span> <span class="o">+</span> <span class="s">&quot; not supported&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">items</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="IRC.create_filter_report"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.IRC.create_filter_report">[docs]</a>    <span class="k">def</span> <span class="nf">create_filter_report</span><span class="p">(</span><span class="n">filter_</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">destdir</span><span class="p">,</span> <span class="n">npeople</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">bots</span><span class="p">):</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="n">IRC</span><span class="o">.</span><span class="n">get_filter_items</span><span class="p">(</span><span class="n">filter_</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">bots</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">items</span> <span class="o">==</span> <span class="bp">None</span><span class="p">):</span> <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">)):</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">items</span><span class="p">]</span>
+
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">destdir</span><span class="p">,</span> <span class="n">filter_</span><span class="o">.</span><span class="n">get_filename</span><span class="p">(</span><span class="n">IRC</span><span class="p">()))</span>
+        <span class="n">createJSON</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span> <span class="p">:</span>
+            <span class="c"># item_name = &quot;&#39;&quot;+ item+ &quot;&#39;&quot;</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span> <span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="n">filter_item</span> <span class="o">=</span> <span class="n">Filter</span><span class="p">(</span><span class="n">filter_</span><span class="o">.</span><span class="n">get_name</span><span class="p">(),</span> <span class="n">item</span><span class="p">)</span>
+
+            <span class="n">evol_data</span> <span class="o">=</span> <span class="n">IRC</span><span class="o">.</span><span class="n">get_evolutionary_data</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">filter_item</span><span class="p">)</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">destdir</span><span class="p">,</span> <span class="n">filter_item</span><span class="o">.</span><span class="n">get_evolutionary_filename</span><span class="p">(</span><span class="n">IRC</span><span class="p">()))</span>
+            <span class="n">createJSON</span><span class="p">(</span><span class="n">completePeriodIds</span><span class="p">(</span><span class="n">evol_data</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">),</span> <span class="n">fn</span><span class="p">)</span>
+
+            <span class="n">agg</span> <span class="o">=</span> <span class="n">IRC</span><span class="o">.</span><span class="n">get_agg_data</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">filter_item</span><span class="p">)</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">destdir</span><span class="p">,</span> <span class="n">filter_item</span><span class="o">.</span><span class="n">get_static_filename</span><span class="p">(</span><span class="n">IRC</span><span class="p">()))</span>
+            <span class="n">createJSON</span><span class="p">(</span><span class="n">agg</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="IRC.get_top_people"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.IRC.get_top_people">[docs]</a>    <span class="k">def</span> <span class="nf">get_top_people</span><span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">npeople</span><span class="p">):</span>
+        <span class="n">top_data</span> <span class="o">=</span> <span class="n">IRC</span><span class="o">.</span><span class="n">get_top_data</span> <span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">npeople</span><span class="p">)</span>
+
+        <span class="n">top</span> <span class="o">=</span> <span class="n">top_data</span><span class="p">[</span><span class="s">&#39;senders.&#39;</span><span class="p">][</span><span class="s">&quot;id&quot;</span><span class="p">]</span>
+        <span class="n">top</span> <span class="o">+=</span> <span class="n">top_data</span><span class="p">[</span><span class="s">&#39;senders.last year&#39;</span><span class="p">][</span><span class="s">&quot;id&quot;</span><span class="p">]</span>
+        <span class="n">top</span> <span class="o">+=</span> <span class="n">top_data</span><span class="p">[</span><span class="s">&#39;senders.last month&#39;</span><span class="p">][</span><span class="s">&quot;id&quot;</span><span class="p">]</span>
+        <span class="c"># remove duplicates</span>
+        <span class="n">people</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">top</span><span class="p">))</span> 
+        <span class="k">return</span> <span class="n">people</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="IRC.get_person_evol"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.IRC.get_person_evol">[docs]</a>    <span class="k">def</span> <span class="nf">get_person_evol</span><span class="p">(</span><span class="n">upeople_id</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">):</span>
+        <span class="n">evol</span> <span class="o">=</span> <span class="n">GetEvolPeopleIRC</span><span class="p">(</span><span class="n">upeople_id</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+        <span class="n">evol</span> <span class="o">=</span> <span class="n">completePeriodIds</span><span class="p">(</span><span class="n">evol</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">evol</span>
+
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="IRC.get_person_agg"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.IRC.get_person_agg">[docs]</a>    <span class="k">def</span> <span class="nf">get_person_agg</span><span class="p">(</span><span class="n">upeople_id</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">GetStaticPeopleIRC</span><span class="p">(</span><span class="n">upeople_id</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="IRC.create_r_reports"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.IRC.create_r_reports">[docs]</a>    <span class="k">def</span> <span class="nf">create_r_reports</span><span class="p">(</span><span class="n">vizr</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">destdir</span><span class="p">):</span>
+        <span class="k">pass</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="IRC.get_metrics_definition"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.IRC.get_metrics_definition">[docs]</a>    <span class="k">def</span> <span class="nf">get_metrics_definition</span> <span class="p">():</span>
+        <span class="k">pass</span>
+
+<span class="c"># SQL Metaqueries</span></div></div>
+<div class="viewcode-block" id="GetIRCSQLRepositoriesFrom"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetIRCSQLRepositoriesFrom">[docs]</a><span class="k">def</span> <span class="nf">GetIRCSQLRepositoriesFrom</span> <span class="p">():</span>
+    <span class="c"># tables necessary for repositories</span>
+    <span class="k">return</span> <span class="p">(</span><span class="s">&quot;, channels c&quot;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="GetIRCSQLRepositoriesWhere"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetIRCSQLRepositoriesWhere">[docs]</a><span class="k">def</span> <span class="nf">GetIRCSQLRepositoriesWhere</span> <span class="p">(</span><span class="n">repository</span><span class="p">):</span>
+    <span class="c"># filters necessaries for repositories</span>
+    <span class="k">return</span> <span class="p">(</span><span class="s">&quot; i.channel_id = c.id and c.name=&quot;</span><span class="o">+</span><span class="n">repository</span><span class="o">+</span><span class="s">&quot; &quot;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="GetIRCSQLCompaniesFrom"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetIRCSQLCompaniesFrom">[docs]</a><span class="k">def</span> <span class="nf">GetIRCSQLCompaniesFrom</span> <span class="p">(</span><span class="n">i_db</span><span class="p">):</span>
+    <span class="c"># tables necessary to companies analysis</span>
+    <span class="k">return</span><span class="p">(</span><span class="s">&quot; , people_upeople pup, &quot;</span><span class="o">+</span>\
+                   <span class="n">i_db</span><span class="o">+</span><span class="s">&quot;companies c, &quot;</span><span class="o">+</span>\
+                   <span class="n">i_db</span><span class="o">+</span><span class="s">&quot;.upeople_companies upc&quot;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="GetIRCSQLCompaniesWhere"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetIRCSQLCompaniesWhere">[docs]</a><span class="k">def</span> <span class="nf">GetIRCSQLCompaniesWhere</span> <span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="c"># filters necessary to companies analysis</span>
+    <span class="k">return</span><span class="p">(</span><span class="s">&quot; i.nick = pup.people_id and &quot;</span><span class="o">+</span>\
+           <span class="s">&quot;pup.upeople_id = upc.upeople_id and &quot;</span><span class="o">+</span>\
+           <span class="s">&quot;upc.company_id = c.id and &quot;</span><span class="o">+</span>\
+           <span class="s">&quot;i.submitted_on &gt;= upc.init and &quot;</span><span class="o">+</span>\
+           <span class="s">&quot;i.submitted_on &lt; upc.end and &quot;</span><span class="o">+</span>\
+           <span class="s">&quot;c.name = &quot;</span><span class="o">+</span><span class="n">name</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="GetIRCSQLCountriesFrom"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetIRCSQLCountriesFrom">[docs]</a><span class="k">def</span> <span class="nf">GetIRCSQLCountriesFrom</span> <span class="p">(</span><span class="n">i_db</span><span class="p">):</span>
+    <span class="c"># tables necessary to countries analysis</span>
+    <span class="k">return</span><span class="p">(</span><span class="s">&quot; , people_upeople pup, &quot;</span><span class="o">+</span>\
+           <span class="n">i_db</span><span class="o">+</span><span class="s">&quot;.countries c, &quot;</span><span class="o">+</span>\
+           <span class="n">i_db</span><span class="o">+</span><span class="s">&quot;.upeople_countries upc&quot;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="GetIRCSQLCountriesWhere"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetIRCSQLCountriesWhere">[docs]</a><span class="k">def</span> <span class="nf">GetIRCSQLCountriesWhere</span> <span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="c"># filters necessary to countries analysis</span>
+    <span class="k">return</span><span class="p">(</span><span class="s">&quot; i.nick = pup.people_id and &quot;</span><span class="o">+</span>\
+           <span class="s">&quot;pup.upeople_id = upc.upeople_id and &quot;</span><span class="o">+</span>\
+           <span class="s">&quot;upc.country_id = c.id and &quot;</span><span class="o">+</span>\
+           <span class="s">&quot;c.name = &quot;</span><span class="o">+</span><span class="n">name</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="GetIRCSQLDomainsFrom"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetIRCSQLDomainsFrom">[docs]</a><span class="k">def</span> <span class="nf">GetIRCSQLDomainsFrom</span> <span class="p">(</span><span class="n">i_db</span><span class="p">):</span>
+    <span class="c"># tables necessary to domains analysis</span>
+    <span class="k">return</span><span class="p">(</span><span class="s">&quot; , people_upeople pup, &quot;</span><span class="o">+</span>\
+           <span class="n">i_db</span><span class="o">+</span><span class="s">&quot;.domains d, &quot;</span><span class="o">+</span>\
+           <span class="n">i_db</span><span class="o">+</span><span class="s">&quot;.upeople_domains upd&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="GetIRCSQLDomainsWhere"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetIRCSQLDomainsWhere">[docs]</a><span class="k">def</span> <span class="nf">GetIRCSQLDomainsWhere</span> <span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="c"># filters necessary to domains analysis</span>
+    <span class="k">return</span><span class="p">(</span><span class="s">&quot; i.nick = pup.people_id and &quot;</span><span class="o">+</span>\
+           <span class="s">&quot;pup.upeople_id = upd.upeople_id and &quot;</span><span class="o">+</span>\
+           <span class="s">&quot;upd.domain_id = d.id and &quot;</span><span class="o">+</span>\
+           <span class="s">&quot;d.name = &quot;</span><span class="o">+</span><span class="n">name</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="GetTablesOwnUniqueIdsIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetTablesOwnUniqueIdsIRC">[docs]</a><span class="k">def</span> <span class="nf">GetTablesOwnUniqueIdsIRC</span> <span class="p">()</span> <span class="p">:</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="s">&#39;irclog, people_upeople pup&#39;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">tables</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="GetFiltersOwnUniqueIdsIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetFiltersOwnUniqueIdsIRC">[docs]</a><span class="k">def</span> <span class="nf">GetFiltersOwnUniqueIdsIRC</span> <span class="p">()</span> <span class="p">:</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="s">&#39;pup.people_id = irclog.nick&#39;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">filters</span><span class="p">)</span> 
+
+<span class="c">##########</span>
+<span class="c">#Generic functions to obtain FROM and WHERE clauses per type of report</span>
+<span class="c">##########</span>
+</div>
+<div class="viewcode-block" id="GetIRCSQLReportFrom"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetIRCSQLReportFrom">[docs]</a><span class="k">def</span> <span class="nf">GetIRCSQLReportFrom</span> <span class="p">(</span><span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">):</span>
+    <span class="c">#generic function to generate &#39;from&#39; clauses</span>
+    <span class="c">#&quot;type&quot; is a list of two values: type of analysis and value of </span>
+    <span class="c">#such analysis</span>
+
+    <span class="n">From</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">type_analysis</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">type_analysis</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">):</span> <span class="k">return</span> <span class="n">From</span>
+
+    <span class="n">analysis</span> <span class="o">=</span> <span class="n">type_analysis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">analysis</span> <span class="o">==</span> <span class="s">&#39;repository&#39;</span><span class="p">:</span> <span class="n">From</span> <span class="o">=</span> <span class="n">GetIRCSQLRepositoriesFrom</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">analysis</span> <span class="o">==</span> <span class="s">&#39;company&#39;</span><span class="p">:</span> <span class="n">From</span> <span class="o">=</span> <span class="n">GetIRCSQLCompaniesFrom</span><span class="p">(</span><span class="n">identities_db</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">analysis</span> <span class="o">==</span> <span class="s">&#39;country&#39;</span><span class="p">:</span> <span class="n">From</span> <span class="o">=</span> <span class="n">GetIRCSQLCountriesFrom</span><span class="p">(</span><span class="n">identities_db</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">analysis</span> <span class="o">==</span> <span class="s">&#39;domain&#39;</span><span class="p">:</span> <span class="n">From</span> <span class="o">=</span> <span class="n">GetIRCSQLDomainsFrom</span><span class="p">(</span><span class="n">identities_db</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">From</span><span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="GetIRCSQLReportWhere"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetIRCSQLReportWhere">[docs]</a><span class="k">def</span> <span class="nf">GetIRCSQLReportWhere</span> <span class="p">(</span><span class="n">type_analysis</span><span class="p">):</span>
+    <span class="c">#generic function to generate &#39;where&#39; clauses</span>
+    <span class="c">#&quot;type&quot; is a list of two values: type of analysis and value of </span>
+    <span class="c">#such analysis</span>
+
+    <span class="n">where</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">type_analysis</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">type_analysis</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">):</span> <span class="k">return</span> <span class="n">where</span>
+
+    <span class="n">analysis</span> <span class="o">=</span> <span class="n">type_analysis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">type_analysis</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">analysis</span> <span class="o">==</span> <span class="s">&#39;repository&#39;</span><span class="p">:</span> <span class="n">where</span> <span class="o">=</span> <span class="n">GetIRCSQLRepositoriesWhere</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">analysis</span> <span class="o">==</span> <span class="s">&#39;company&#39;</span><span class="p">:</span> <span class="n">where</span> <span class="o">=</span> <span class="n">GetIRCSQLCompaniesWhere</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">analysis</span> <span class="o">==</span> <span class="s">&#39;country&#39;</span><span class="p">:</span> <span class="n">where</span> <span class="o">=</span> <span class="n">GetIRCSQLCountriesWhere</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">analysis</span> <span class="o">==</span> <span class="s">&#39;domain&#39;</span><span class="p">:</span> <span class="n">where</span> <span class="o">=</span> <span class="n">GetIRCSQLDomainsWhere</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">where</span><span class="p">)</span>
+
+<span class="c"># GLOBAL</span>
+</div>
+<div class="viewcode-block" id="GetStaticDataIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetStaticDataIRC">[docs]</a><span class="k">def</span> <span class="nf">GetStaticDataIRC</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">):</span>
+
+    <span class="c"># 1- Retrieving information</span>
+    <span class="n">sent</span> <span class="o">=</span> <span class="n">StaticNumSentIRC</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">)</span>
+    <span class="n">senders</span> <span class="o">=</span> <span class="n">StaticNumSendersIRC</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">)</span>
+    <span class="n">repositories</span> <span class="o">=</span> <span class="n">StaticNumRepositoriesIRC</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span>	<span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">)</span>
+
+    <span class="c"># 2- Merging information</span>
+    <span class="n">static_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">sent</span><span class="o">.</span><span class="n">items</span><span class="p">()</span><span class="o">+</span> <span class="n">senders</span><span class="o">.</span><span class="n">items</span><span class="p">()</span><span class="o">+</span> <span class="n">repositories</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">static_data</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="GetEvolDataIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetEvolDataIRC">[docs]</a><span class="k">def</span> <span class="nf">GetEvolDataIRC</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">):</span>
+
+    <span class="c"># 1- Retrieving information</span>
+    <span class="n">sent</span> <span class="o">=</span> <span class="n">EvolSentIRC</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">)</span>
+    <span class="n">sent</span> <span class="o">=</span> <span class="n">completePeriodIds</span><span class="p">(</span><span class="n">sent</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+    <span class="n">senders</span> <span class="o">=</span> <span class="n">EvolSendersIRC</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">)</span>
+    <span class="n">senders</span> <span class="o">=</span> <span class="n">completePeriodIds</span><span class="p">(</span><span class="n">senders</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+    <span class="n">repositories</span> <span class="o">=</span> <span class="n">EvolRepositoriesIRC</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">)</span>
+    <span class="n">repositories</span> <span class="o">=</span> <span class="n">completePeriodIds</span><span class="p">(</span><span class="n">repositories</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+
+    <span class="c"># 2- Merging information</span>
+    <span class="n">evol_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">sent</span><span class="o">.</span><span class="n">items</span><span class="p">()</span><span class="o">+</span> <span class="n">senders</span><span class="o">.</span><span class="n">items</span><span class="p">()</span><span class="o">+</span> <span class="n">repositories</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">evol_data</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="StaticNumSentIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.StaticNumSentIRC">[docs]</a><span class="k">def</span> <span class="nf">StaticNumSentIRC</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">type_analysis</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="s">&quot;SELECT count(message) as sent, </span><span class="se">\</span>
+<span class="s">              DATE_FORMAT (min(date), &#39;%Y-%m-</span><span class="si">%d</span><span class="s">&#39;) as first_date, </span><span class="se">\</span>
+<span class="s">              DATE_FORMAT (max(date), &#39;%Y-%m-</span><span class="si">%d</span><span class="s">&#39;) as last_date &quot;</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="s">&quot; FROM irclog &quot;</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="s">&quot;WHERE date &gt;=&quot;</span> <span class="o">+</span> <span class="n">startdate</span> <span class="o">+</span> <span class="s">&quot; and date &lt; &quot;</span> <span class="o">+</span> <span class="n">enddate</span>
+    <span class="n">filters</span> <span class="o">+=</span> <span class="s">&quot; AND type=&#39;COMMENT&#39; &quot;</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">fields</span> <span class="o">+</span> <span class="n">tables</span> <span class="o">+</span> <span class="n">filters</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="StaticNumSendersIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.StaticNumSendersIRC">[docs]</a><span class="k">def</span> <span class="nf">StaticNumSendersIRC</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">type_analysis</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="s">&quot;SELECT count(distinct(nick)) as senders&quot;</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="s">&quot; FROM irclog &quot;</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="s">&quot;WHERE date &gt;=&quot;</span> <span class="o">+</span> <span class="n">startdate</span> <span class="o">+</span> <span class="s">&quot; and date &lt; &quot;</span> <span class="o">+</span> <span class="n">enddate</span>
+    <span class="n">filters</span> <span class="o">+=</span> <span class="s">&quot; AND type=&#39;COMMENT&#39; &quot;</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">fields</span> <span class="o">+</span> <span class="n">tables</span> <span class="o">+</span> <span class="n">filters</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="StaticNumRepositoriesIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.StaticNumRepositoriesIRC">[docs]</a><span class="k">def</span> <span class="nf">StaticNumRepositoriesIRC</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">type_analysis</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="s">&quot;SELECT COUNT(DISTINCT(channel_id)) AS repositories &quot;</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="s">&quot;FROM irclog &quot;</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="s">&quot;WHERE date &gt;=&quot;</span> <span class="o">+</span> <span class="n">startdate</span> <span class="o">+</span> <span class="s">&quot; AND date &lt; &quot;</span> <span class="o">+</span> <span class="n">enddate</span>
+    <span class="n">filters</span> <span class="o">+=</span> <span class="s">&quot; AND type=&#39;COMMENT&#39; &quot;</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">fields</span> <span class="o">+</span> <span class="n">tables</span> <span class="o">+</span> <span class="n">filters</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="GetSentIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetSentIRC">[docs]</a><span class="k">def</span> <span class="nf">GetSentIRC</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">,</span> <span class="n">evolutionary</span><span class="p">):</span>    
+    <span class="n">fields</span> <span class="o">=</span> <span class="s">&quot; count(distinct(message)) as sent &quot;</span> 
+    <span class="n">tables</span> <span class="o">=</span> <span class="s">&quot; irclog &quot;</span> <span class="o">+</span> <span class="n">GetIRCSQLReportFrom</span><span class="p">(</span><span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">)</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="n">GetIRCSQLReportWhere</span><span class="p">(</span><span class="n">type_analysis</span><span class="p">)</span>
+    <span class="n">filters</span> <span class="o">+=</span> <span class="s">&quot; and type=&#39;COMMENT&#39; &quot;</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">BuildQuery</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="s">&quot; date &quot;</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">evolutionary</span><span class="p">)</span>    
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="EvolSentIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.EvolSentIRC">[docs]</a><span class="k">def</span> <span class="nf">EvolSentIRC</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">):</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">GetSentIRC</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="GetSendersIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetSendersIRC">[docs]</a><span class="k">def</span> <span class="nf">GetSendersIRC</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">,</span> <span class="n">evolutionary</span><span class="p">):</span>    
+    <span class="n">fields</span> <span class="o">=</span> <span class="s">&quot; count(distinct(nick)) as senders &quot;</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="s">&quot; irclog &quot;</span> <span class="o">+</span> <span class="n">GetIRCSQLReportFrom</span><span class="p">(</span><span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">)</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="n">GetIRCSQLReportWhere</span><span class="p">(</span><span class="n">type_analysis</span><span class="p">)</span>
+    <span class="n">filters</span> <span class="o">+=</span> <span class="s">&quot; and type=&#39;COMMENT&#39; &quot;</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">BuildQuery</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="s">&quot; date &quot;</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">evolutionary</span><span class="p">)</span>    
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="EvolSendersIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.EvolSendersIRC">[docs]</a><span class="k">def</span> <span class="nf">EvolSendersIRC</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">):</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">GetSendersIRC</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="GetRepositoriesIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetRepositoriesIRC">[docs]</a><span class="k">def</span> <span class="nf">GetRepositoriesIRC</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">,</span> <span class="n">evolutionary</span><span class="p">):</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="s">&quot; COUNT(DISTINCT(channel_id)) AS repositories &quot;</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="s">&quot; irclog &quot;</span> <span class="o">+</span> <span class="n">GetIRCSQLReportFrom</span><span class="p">(</span><span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">)</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="n">GetIRCSQLReportWhere</span><span class="p">(</span><span class="n">type_analysis</span><span class="p">)</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">BuildQuery</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="s">&quot; date &quot;</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">evolutionary</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="EvolRepositoriesIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.EvolRepositoriesIRC">[docs]</a><span class="k">def</span> <span class="nf">EvolRepositoriesIRC</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">):</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">GetRepositoriesIRC</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="GetTopSendersIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetTopSendersIRC">[docs]</a><span class="k">def</span> <span class="nf">GetTopSendersIRC</span> <span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">bots</span><span class="p">,</span> <span class="n">limit</span><span class="p">):</span>
+    <span class="n">date_limit</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+    <span class="n">filter_bots</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">bot</span> <span class="ow">in</span> <span class="n">bots</span><span class="p">:</span>
+        <span class="n">filter_bots</span> <span class="o">+=</span> <span class="s">&quot; nick&lt;&gt;&#39;&quot;</span><span class="o">+</span><span class="n">bot</span><span class="o">+</span><span class="s">&quot;&#39; and &quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">days</span> <span class="o">!=</span> <span class="mi">0</span> <span class="p">):</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s">&quot;SELECT @maxdate:=max(date) from irclog limit 1&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">date_limit</span> <span class="o">=</span> <span class="s">&quot; AND DATEDIFF(@maxdate, date)&lt;&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">days</span><span class="p">)</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="s">&quot;SELECT up.id as id, up.identifier as senders,&quot;</span><span class="o">+</span>\
+        <span class="s">&quot;       COUNT(irclog.id) as sent &quot;</span><span class="o">+</span>\
+        <span class="s">&quot; FROM irclog, people_upeople pup, &quot;</span><span class="o">+</span><span class="n">identities_db</span><span class="o">+</span><span class="s">&quot;.upeople up &quot;</span><span class="o">+</span>\
+        <span class="s">&quot; WHERE &quot;</span><span class="o">+</span> <span class="n">filter_bots</span> <span class="o">+</span>\
+        <span class="s">&quot;            irclog.type = &#39;COMMENT&#39; and &quot;</span><span class="o">+</span>\
+        <span class="s">&quot;            irclog.nick = pup.people_id and &quot;</span><span class="o">+</span>\
+        <span class="s">&quot;            pup.upeople_id = up.id and &quot;</span><span class="o">+</span>\
+        <span class="s">&quot;            date &gt;= &quot;</span><span class="o">+</span> <span class="n">startdate</span><span class="o">+</span> <span class="s">&quot; and &quot;</span><span class="o">+</span>\
+        <span class="s">&quot;            date  &lt; &quot;</span><span class="o">+</span> <span class="n">enddate</span><span class="o">+</span> <span class="s">&quot; &quot;</span><span class="o">+</span> <span class="n">date_limit</span> <span class="o">+</span>\
+        <span class="s">&quot;            GROUP BY senders &quot;</span><span class="o">+</span>\
+        <span class="s">&quot;            ORDER BY sent desc, senders &quot;</span><span class="o">+</span>\
+        <span class="s">&quot;            LIMIT &quot;</span> <span class="o">+</span> <span class="n">limit</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+
+<span class="c">#</span>
+<span class="c"># Repositories (channels)</span>
+<span class="c">#</span>
+</div>
+<div class="viewcode-block" id="GetTablesReposIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetTablesReposIRC">[docs]</a><span class="k">def</span> <span class="nf">GetTablesReposIRC</span> <span class="p">()</span> <span class="p">:</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">GetTablesOwnUniqueIdsIRC</span><span class="p">()</span><span class="o">+</span><span class="s">&quot;,channels c&quot;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="GetFiltersReposIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetFiltersReposIRC">[docs]</a><span class="k">def</span> <span class="nf">GetFiltersReposIRC</span> <span class="p">()</span> <span class="p">:</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="n">GetFiltersOwnUniqueIdsIRC</span><span class="p">()</span> <span class="o">+</span><span class="s">&quot; AND c.id = irclog.channel_id&quot;</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">filters</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="GetReposNameIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetReposNameIRC">[docs]</a><span class="k">def</span> <span class="nf">GetReposNameIRC</span> <span class="p">():</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="s">&quot;SELECT name, count(i.id) AS total &quot;</span><span class="o">+</span>\
+        <span class="s">&quot;  FROM irclog i, channels c &quot;</span><span class="o">+</span>\
+        <span class="s">&quot;  WHERE i.channel_id=c.id &quot;</span><span class="o">+</span>\
+        <span class="s">&quot;  GROUP BY name ORDER BY total DESC&quot;</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">q</span><span class="p">)[</span><span class="s">&#39;name&#39;</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="GetRepoEvolSentSendersIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetRepoEvolSentSendersIRC">[docs]</a><span class="k">def</span> <span class="nf">GetRepoEvolSentSendersIRC</span> <span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">):</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="s">&#39;COUNT(irclog.id) AS sent, COUNT(DISTINCT(pup.upeople_id)) AS senders&#39;</span>
+    <span class="n">tables</span><span class="o">=</span> <span class="n">GetTablesReposIRC</span><span class="p">()</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="n">GetFiltersReposIRC</span><span class="p">()</span> <span class="o">+</span> <span class="s">&quot; AND c.name=&#39;&quot;</span><span class="o">+</span><span class="n">repo</span><span class="o">+</span><span class="s">&quot;&#39;&quot;</span>
+    <span class="n">filters</span> <span class="o">+=</span> <span class="s">&quot; AND irclog.type=&#39;COMMENT&#39;&quot;</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">GetSQLPeriod</span><span class="p">(</span><span class="n">period</span><span class="p">,</span><span class="s">&#39;date&#39;</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="GetRepoStaticSentSendersIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetRepoStaticSentSendersIRC">[docs]</a><span class="k">def</span> <span class="nf">GetRepoStaticSentSendersIRC</span> <span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">):</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="s">&#39;COUNT(irclog.id) AS sent,&#39;</span><span class="o">+</span>\
+            <span class="s">&#39;COUNT(DISTINCT(pup.upeople_id)) AS senders&#39;</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="n">GetTablesReposIRC</span><span class="p">()</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="n">GetFiltersReposIRC</span><span class="p">()</span><span class="o">+</span><span class="s">&quot; AND c.name=&#39;&quot;</span><span class="o">+</span><span class="n">repo</span><span class="o">+</span><span class="s">&quot;&#39;&quot;</span>
+    <span class="n">filters</span> <span class="o">+=</span> <span class="s">&quot; AND irclog.type=&#39;COMMENT&#39;&quot;</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">GetSQLGlobal</span><span class="p">(</span><span class="s">&#39;date&#39;</span><span class="p">,</span><span class="n">fields</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+
+<span class="c">#########</span>
+<span class="c"># PEOPLE</span>
+<span class="c">#########</span></div>
+<div class="viewcode-block" id="GetListPeopleIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetListPeopleIRC">[docs]</a><span class="k">def</span> <span class="nf">GetListPeopleIRC</span> <span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span> <span class="p">:</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="s">&quot;DISTINCT(pup.upeople_id) as id, count(irclog.id) total&quot;</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="n">GetTablesOwnUniqueIdsIRC</span><span class="p">()</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="n">GetFiltersOwnUniqueIdsIRC</span><span class="p">()</span>
+    <span class="n">filters</span> <span class="o">+=</span> <span class="s">&quot; AND irclog.type=&#39;COMMENT&#39; &quot;</span>
+    <span class="n">filters</span> <span class="o">+=</span> <span class="s">&quot; GROUP BY nick ORDER BY total desc&quot;</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">GetSQLGlobal</span><span class="p">(</span><span class="s">&#39;date&#39;</span><span class="p">,</span><span class="n">fields</span><span class="p">,</span><span class="n">tables</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="GetQueryPeopleIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetQueryPeopleIRC">[docs]</a><span class="k">def</span> <span class="nf">GetQueryPeopleIRC</span> <span class="p">(</span><span class="n">developer_id</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">evol</span><span class="p">):</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="s">&quot;COUNT(irclog.id) AS sent&quot;</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="n">GetTablesOwnUniqueIdsIRC</span><span class="p">()</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="n">GetFiltersOwnUniqueIdsIRC</span><span class="p">()</span> <span class="o">+</span> <span class="s">&quot; AND pup.upeople_id = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">developer_id</span><span class="p">)</span>
+    <span class="n">filters</span> <span class="o">+=</span> <span class="s">&quot; AND irclog.type=&#39;COMMENT&#39;&quot;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">evol</span><span class="p">)</span> <span class="p">:</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">GetSQLPeriod</span><span class="p">(</span><span class="n">period</span><span class="p">,</span><span class="s">&#39;date&#39;</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span>
+                <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="n">fields</span> <span class="o">+</span> \
+                <span class="s">&quot;,DATE_FORMAT (min(date),&#39;%Y-%m-</span><span class="si">%d</span><span class="s">&#39;) as first_date,&quot;</span><span class="o">+</span>\
+                <span class="s">&quot; DATE_FORMAT (max(date),&#39;%Y-%m-</span><span class="si">%d</span><span class="s">&#39;) as last_date&quot;</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">GetSQLGlobal</span><span class="p">(</span><span class="s">&#39;date&#39;</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span>
+                <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">q</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="GetEvolPeopleIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetEvolPeopleIRC">[docs]</a><span class="k">def</span> <span class="nf">GetEvolPeopleIRC</span> <span class="p">(</span><span class="n">developer_id</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span> <span class="p">:</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">GetQueryPeopleIRC</span><span class="p">(</span><span class="n">developer_id</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="GetStaticPeopleIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetStaticPeopleIRC">[docs]</a><span class="k">def</span> <span class="nf">GetStaticPeopleIRC</span> <span class="p">(</span><span class="n">developer_id</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span> <span class="p">:</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">GetQueryPeopleIRC</span><span class="p">(</span><span class="n">developer_id</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="GetPeopleIRC"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetPeopleIRC">[docs]</a><span class="k">def</span> <span class="nf">GetPeopleIRC</span><span class="p">():</span>
+    <span class="c"># Returns the ids of the IRC participants</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="s">&quot;SELECT DISTINCT(upeople_id) AS members FROM people_upeople&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;members&#39;</span><span class="p">])</span>    
+
+<span class="c">##############</span>
+<span class="c"># Microstudies</span>
+<span class="c">##############</span>
+</div>
+<div class="viewcode-block" id="GetIRCDiffSentDays"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetIRCDiffSentDays">[docs]</a><span class="k">def</span> <span class="nf">GetIRCDiffSentDays</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">init_date</span><span class="p">,</span> <span class="n">days</span><span class="p">):</span>
+    <span class="c"># This function provides the percentage in activity between two periods.</span>
+    <span class="c">#</span>
+    <span class="c"># The netvalue indicates if this is an increment (positive value) or decrement (negative value)</span>
+
+    <span class="n">chardates</span> <span class="o">=</span> <span class="n">GetDates</span><span class="p">(</span><span class="n">init_date</span><span class="p">,</span> <span class="n">days</span><span class="p">)</span>
+    <span class="n">lastmessages</span> <span class="o">=</span> <span class="n">StaticNumSentIRC</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">chardates</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">chardates</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">lastmessages</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lastmessages</span><span class="p">[</span><span class="s">&#39;sent&#39;</span><span class="p">])</span>
+    <span class="n">prevmessages</span> <span class="o">=</span> <span class="n">StaticNumSentIRC</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">chardates</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">chardates</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">prevmessages</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prevmessages</span><span class="p">[</span><span class="s">&#39;sent&#39;</span><span class="p">])</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;diff_netsent_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">days</span><span class="p">)]</span> <span class="o">=</span> <span class="n">lastmessages</span> <span class="o">-</span> <span class="n">prevmessages</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;percentage_sent_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">days</span><span class="p">)]</span> <span class="o">=</span> <span class="n">GetPercentageDiff</span><span class="p">(</span><span class="n">prevmessages</span><span class="p">,</span> <span class="n">lastmessages</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;sent_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">days</span><span class="p">)]</span> <span class="o">=</span> <span class="n">lastmessages</span>
+
+    <span class="k">return</span> <span class="n">data</span>
+</div>
+<div class="viewcode-block" id="GetIRCDiffSendersDays"><a class="viewcode-back" href="../../vizgrimoire.IRC.html#vizgrimoire.IRC.GetIRCDiffSendersDays">[docs]</a><span class="k">def</span> <span class="nf">GetIRCDiffSendersDays</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">init_date</span><span class="p">,</span> <span class="n">identities_db</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">days</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+    <span class="c"># This function provides the percentage in activity between two periods:</span>
+    <span class="c"># Fixme: equal to GetDiffAuthorsDays</span>
+
+    <span class="n">chardates</span> <span class="o">=</span> <span class="n">GetDates</span><span class="p">(</span><span class="n">init_date</span><span class="p">,</span> <span class="n">days</span><span class="p">)</span>
+    <span class="n">lastsenders</span> <span class="o">=</span> <span class="n">StaticNumSendersIRC</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">chardates</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">chardates</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">identities_db</span><span class="p">)</span>
+    <span class="n">lastsenders</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lastsenders</span><span class="p">[</span><span class="s">&#39;senders&#39;</span><span class="p">])</span>
+    <span class="n">prevsenders</span> <span class="o">=</span> <span class="n">StaticNumSendersIRC</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">chardates</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">chardates</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">identities_db</span><span class="p">)</span>
+    <span class="n">prevsenders</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prevsenders</span><span class="p">[</span><span class="s">&#39;senders&#39;</span><span class="p">])</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;diff_netsenders_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">days</span><span class="p">)]</span> <span class="o">=</span> <span class="n">lastsenders</span> <span class="o">-</span> <span class="n">prevsenders</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;percentage_senders_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">days</span><span class="p">)]</span> <span class="o">=</span> <span class="n">GetPercentageDiff</span><span class="p">(</span><span class="n">prevsenders</span><span class="p">,</span> <span class="n">lastsenders</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;senders_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">days</span><span class="p">)]</span> <span class="o">=</span> <span class="n">lastsenders</span>
+
+    <span class="k">return</span> <span class="n">data</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">GrimoreLib 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Bitergia.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

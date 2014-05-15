@@ -1,0 +1,328 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>vizgrimoire.Downloads &mdash; GrimoreLib 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="GrimoreLib 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">GrimoreLib 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for vizgrimoire.Downloads</h1><div class="highlight"><pre>
+<span class="c">## Copyright (C) 2014 Bitergia</span>
+<span class="c">##</span>
+<span class="c">## This program is free software; you can redistribute it and/or modify</span>
+<span class="c">## it under the terms of the GNU General Public License as published by</span>
+<span class="c">## the Free Software Foundation; either version 3 of the License, or</span>
+<span class="c">## (at your option) any later version.</span>
+<span class="c">##</span>
+<span class="c">## This program is distributed in the hope that it will be useful,</span>
+<span class="c">## but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c">## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the</span>
+<span class="c">## GNU General Public License for more details. </span>
+<span class="c">##</span>
+<span class="c">## You should have received a copy of the GNU General Public License</span>
+<span class="c">## along with this program; if not, write to the Free Software</span>
+<span class="c">## Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.</span>
+<span class="c">##</span>
+<span class="c">## This file is a part of the vizGrimoire R package</span>
+<span class="c">##  (an R library for the MetricsGrimoire and vizGrimoire systems)</span>
+<span class="c">##</span>
+<span class="c">## Authors:</span>
+<span class="c">##   Daniel Izquierdo &lt;dizquierdo@bitergia.com&gt;</span>
+<span class="c">##   Alvaro del Castillo &lt;acs@bitergia.com&gt;</span>
+
+
+<span class="c"># All of the functions found in this file expect to find a database</span>
+<span class="c"># with the followin format:</span>
+<span class="c"># Table: downloads</span>
+<span class="c">#       Fields: date (datetime), ip (varchar), package (varchar), protocol (varchar)</span>
+<span class="c">#       </span>
+
+<span class="kn">import</span> <span class="nn">logging</span><span class="o">,</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">GrimoireSQL</span> <span class="kn">import</span> <span class="n">ExecuteQuery</span><span class="p">,</span> <span class="n">BuildQuery</span>
+<span class="kn">from</span> <span class="nn">GrimoireUtils</span> <span class="kn">import</span> <span class="n">completePeriodIds</span><span class="p">,</span> <span class="n">createJSON</span>
+
+<span class="kn">from</span> <span class="nn">data_source</span> <span class="kn">import</span> <span class="n">DataSource</span>
+
+
+<div class="viewcode-block" id="Downloads"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.Downloads">[docs]</a><span class="k">class</span> <span class="nc">Downloads</span><span class="p">(</span><span class="n">DataSource</span><span class="p">):</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Downloads.get_db_name"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.Downloads.get_db_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_db_name</span><span class="p">():</span>
+        <span class="k">return</span> <span class="s">&quot;db_downloads&quot;</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Downloads.get_name"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.Downloads.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">():</span> <span class="k">return</span> <span class="s">&quot;downloads&quot;</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Downloads.get_evolutionary_data"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.Downloads.get_evolutionary_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_evolutionary_data</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="n">type_analysis</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">downloads</span> <span class="o">=</span> <span class="n">EvolDownloads</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+        <span class="n">packages</span> <span class="o">=</span> <span class="n">EvolPackages</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+        <span class="n">protocols</span> <span class="o">=</span> <span class="n">EvolProtocols</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+        <span class="n">ips</span> <span class="o">=</span> <span class="n">EvolIPs</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+        <span class="n">evol</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">downloads</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="o">+</span> <span class="n">packages</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="o">+</span> <span class="n">protocols</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="o">+</span> <span class="n">ips</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="n">evol</span> <span class="o">=</span> <span class="n">completePeriodIds</span><span class="p">(</span><span class="n">evol</span><span class="p">,</span>  <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">evol</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Downloads.create_evolutionary_report"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.Downloads.create_evolutionary_report">[docs]</a>    <span class="k">def</span> <span class="nf">create_evolutionary_report</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">destdir</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="n">type_analysis</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span>  <span class="n">Downloads</span><span class="o">.</span><span class="n">get_evolutionary_data</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">)</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">Downloads</span><span class="p">()</span><span class="o">.</span><span class="n">get_evolutionary_filename</span><span class="p">()</span>
+        <span class="n">createJSON</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">destdir</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Downloads.get_agg_data"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.Downloads.get_agg_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_agg_data</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">filter_</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="c"># Tendencies</span>
+        <span class="n">agg</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">filter_</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="n">downloads</span> <span class="o">=</span> <span class="n">AggDownloads</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+            <span class="n">packages</span> <span class="o">=</span> <span class="n">AggPackages</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+            <span class="n">protocols</span> <span class="o">=</span> <span class="n">AggProtocols</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+            <span class="n">ips</span> <span class="o">=</span> <span class="n">AggIPs</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">)</span>
+            <span class="n">agg</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">downloads</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="o">+</span> <span class="n">packages</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="o">+</span> <span class="n">protocols</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="o">+</span> <span class="n">ips</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Downloads does not support filters.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">agg</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Downloads.create_agg_report"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.Downloads.create_agg_report">[docs]</a>    <span class="k">def</span> <span class="nf">create_agg_report</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">destdir</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="n">type_analysis</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">Downloads</span><span class="o">.</span><span class="n">get_agg_data</span> <span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">)</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">Downloads</span><span class="p">()</span><span class="o">.</span><span class="n">get_agg_filename</span><span class="p">()</span>
+        <span class="n">createJSON</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">destdir</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Downloads.get_top_data"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.Downloads.get_top_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_top_data</span> <span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">filter_</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">npeople</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">top20</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">top20</span><span class="p">[</span><span class="s">&#39;ips.&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TopIPs</span><span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="n">top20</span><span class="p">[</span><span class="s">&#39;packages.&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TopPackages</span><span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">top20</span>
+
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Downloads.create_top_report"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.Downloads.create_top_report">[docs]</a>    <span class="k">def</span> <span class="nf">create_top_report</span> <span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">destdir</span><span class="p">,</span> <span class="n">npeople</span><span class="p">,</span> <span class="n">i_db</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">Downloads</span><span class="o">.</span><span class="n">get_top_data</span> <span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">i_db</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">npeople</span><span class="p">)</span>
+        <span class="n">top_file</span> <span class="o">=</span> <span class="n">destdir</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">Downloads</span><span class="p">()</span><span class="o">.</span><span class="n">get_top_filename</span><span class="p">()</span>
+        <span class="n">createJSON</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">top_file</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Downloads.get_filter_items"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.Downloads.get_filter_items">[docs]</a>    <span class="k">def</span> <span class="nf">get_filter_items</span><span class="p">(</span><span class="n">filter_</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">bots</span><span class="p">):</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">filter_name</span> <span class="o">=</span> <span class="n">filter_</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;Downloads &quot;</span> <span class="o">+</span> <span class="n">filter_name</span> <span class="o">+</span> <span class="s">&quot; not supported&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">items</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Downloads.create_filter_report"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.Downloads.create_filter_report">[docs]</a>    <span class="k">def</span> <span class="nf">create_filter_report</span><span class="p">(</span><span class="n">filter_</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">destdir</span><span class="p">,</span> <span class="n">npeople</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">bots</span><span class="p">):</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="n">Downloads</span><span class="o">.</span><span class="n">get_filter_items</span><span class="p">(</span><span class="n">filter_</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">bots</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">items</span> <span class="o">==</span> <span class="bp">None</span><span class="p">):</span> <span class="k">return</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Downloads.get_top_people"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.Downloads.get_top_people">[docs]</a>    <span class="k">def</span> <span class="nf">get_top_people</span><span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">npeople</span><span class="p">):</span>
+        <span class="k">pass</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Downloads.get_person_evol"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.Downloads.get_person_evol">[docs]</a>    <span class="k">def</span> <span class="nf">get_person_evol</span><span class="p">(</span><span class="n">upeople_id</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">):</span>
+        <span class="k">pass</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Downloads.get_person_agg"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.Downloads.get_person_agg">[docs]</a>    <span class="k">def</span> <span class="nf">get_person_agg</span><span class="p">(</span><span class="n">upeople_id</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">type_analysis</span><span class="p">):</span>
+        <span class="k">pass</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Downloads.create_r_reports"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.Downloads.create_r_reports">[docs]</a>    <span class="k">def</span> <span class="nf">create_r_reports</span><span class="p">(</span><span class="n">vizr</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">destdir</span><span class="p">):</span>
+        <span class="k">pass</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Downloads.get_metrics_definition"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.Downloads.get_metrics_definition">[docs]</a>    <span class="k">def</span> <span class="nf">get_metrics_definition</span> <span class="p">():</span>
+        <span class="k">pass</span>
+
+</div></div>
+<div class="viewcode-block" id="GetDownloads"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.GetDownloads">[docs]</a><span class="k">def</span> <span class="nf">GetDownloads</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">evolutionary</span><span class="p">):</span>
+    <span class="c"># Generic function to obtain number of downloads </span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="s">&quot;count(*) as downloads&quot;</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="s">&quot;downloads&quot;</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+   
+    <span class="n">query</span> <span class="o">=</span> <span class="n">BuildQuery</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="s">&quot; date &quot;</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">evolutionary</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">query</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="EvolDownloads"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.EvolDownloads">[docs]</a><span class="k">def</span> <span class="nf">EvolDownloads</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">):</span>
+    <span class="c"># Evolution of downloads</span>
+    <span class="k">return</span> <span class="n">GetDownloads</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="AggDownloads"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.AggDownloads">[docs]</a><span class="k">def</span> <span class="nf">AggDownloads</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">):</span>
+    <span class="c"># Agg number of downloads</span>
+    <span class="k">return</span> <span class="n">GetDownloads</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="GetPackages"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.GetPackages">[docs]</a><span class="k">def</span> <span class="nf">GetPackages</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">evolutionary</span><span class="p">):</span>
+    <span class="c"># Generic function to obtain number of packages</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="s">&quot;count(distinct(package)) as packages&quot;</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="s">&quot;downloads&quot;</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="n">BuildQuery</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="s">&quot; date &quot;</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">evolutionary</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">query</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="EvolPackages"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.EvolPackages">[docs]</a><span class="k">def</span> <span class="nf">EvolPackages</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">):</span>
+    <span class="c"># Evolution of different packages per period</span>
+    <span class="k">return</span> <span class="n">GetPackages</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="AggPackages"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.AggPackages">[docs]</a><span class="k">def</span> <span class="nf">AggPackages</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">):</span>
+    <span class="c"># Agg number of packages in a given period</span>
+    <span class="k">return</span> <span class="n">GetPackages</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="GetProtocols"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.GetProtocols">[docs]</a><span class="k">def</span> <span class="nf">GetProtocols</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">evolutionary</span><span class="p">):</span>
+    <span class="c"># Generic function to obtain number of protocols</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="s">&quot;count(distinct(protocol)) as protocols&quot;</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="s">&quot;downloads&quot;</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="n">BuildQuery</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="s">&quot; date &quot;</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">evolutionary</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">query</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="EvolProtocols"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.EvolProtocols">[docs]</a><span class="k">def</span> <span class="nf">EvolProtocols</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">):</span>
+    <span class="c"># Evolution of different protocols per period</span>
+    <span class="k">return</span> <span class="n">GetProtocols</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="AggProtocols"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.AggProtocols">[docs]</a><span class="k">def</span> <span class="nf">AggProtocols</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">):</span>
+    <span class="c"># Agg number of protocols in a given period</span>
+    <span class="k">return</span> <span class="n">GetProtocols</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="GetIPs"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.GetIPs">[docs]</a><span class="k">def</span> <span class="nf">GetIPs</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">evolutionary</span><span class="p">):</span>
+    <span class="c"># Generic function to obtain number of IPs</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="s">&quot;count(distinct(ip)) as ips&quot;</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="s">&quot;downloads&quot;</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="n">BuildQuery</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="s">&quot; date &quot;</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">evolutionary</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">query</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="EvolIPs"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.EvolIPs">[docs]</a><span class="k">def</span> <span class="nf">EvolIPs</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">):</span>
+    <span class="c"># Evolution of different IPs per period</span>
+    <span class="k">return</span> <span class="n">GetIPs</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="AggIPs"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.AggIPs">[docs]</a><span class="k">def</span> <span class="nf">AggIPs</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">):</span>
+    <span class="c"># Agg number of IPs in a given period</span>
+    <span class="k">return</span> <span class="n">GetIPs</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="TopIPs"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.TopIPs">[docs]</a><span class="k">def</span> <span class="nf">TopIPs</span><span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">numTop</span><span class="p">):</span>
+    <span class="c"># Top IPs downloading packages in a given period</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">            select ip as ips, count(*) as downloads </span>
+<span class="s">            from downloads</span>
+<span class="s">            where date &gt;= </span><span class="si">%s</span><span class="s"> and</span>
+<span class="s">                  date &lt; </span><span class="si">%s</span><span class="s"></span>
+<span class="s">            group by ips</span>
+<span class="s">            order by downloads desc</span>
+<span class="s">            limit </span><span class="si">%s</span><span class="s"></span>
+<span class="s">            &quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">numTop</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TopPackages"><a class="viewcode-back" href="../../vizgrimoire.Downloads.html#vizgrimoire.Downloads.TopPackages">[docs]</a><span class="k">def</span> <span class="nf">TopPackages</span><span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">numTop</span><span class="p">):</span>
+    <span class="c"># Top Packages bein downloaded in a given period</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">            select package as packages, count(*) as downloads</span>
+<span class="s">            from downloads</span>
+<span class="s">            where date &gt;= </span><span class="si">%s</span><span class="s"> and</span>
+<span class="s">                  date &lt; </span><span class="si">%s</span><span class="s"></span>
+<span class="s">            group by packages</span>
+<span class="s">            order by downloads desc</span>
+<span class="s">            limit </span><span class="si">%s</span><span class="s"></span>
+<span class="s">            &quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">numTop</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">query</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">GrimoreLib 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Bitergia.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
