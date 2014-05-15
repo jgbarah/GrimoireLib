@@ -1,0 +1,517 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>build_dashboard module &mdash; GrimoireLib GitHub Example 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="GrimoireLib GitHub Example 1.0 documentation" href="index.html" />
+    <link rel="up" title="&lt;no title&gt;" href="modules.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="modules.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="&lt;no title&gt;"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">GrimoireLib GitHub Example 1.0 documentation</a> &raquo;</li>
+          <li><a href="modules.html" accesskey="U">&lt;no title&gt;</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-build_dashboard">
+<span id="build-dashboard-module"></span><h1>build_dashboard module<a class="headerlink" href="#module-build_dashboard" title="Permalink to this headline">¶</a></h1>
+<p>Simple script to retrieve data from GitHub repositories about a project,
+or all the projects owned by a user.
+It installs CVSAnalY and Bicho (form MetricsGrimoire git repositories),
+the needed packages from vizGrimoire git repositories, R dependencies,
+and main Python dependencies.</p>
+<p>There are options for not installing everything once again if the script
+is run again, run it with &#8211;help to get a full list.</p>
+<p>Example of how to produce a dashboard for repository
+VizGrimoire/VizGrimoireR:</p>
+<dl class="docutils">
+<dt>vg-github.py &#8211;user jgb &#8211;passwd XXX &#8211;dir /tmp/vgr &#8211;removedb</dt>
+<dd>&#8211;ghuser ghuser &#8211;ghpasswd XXX VizGrimoire/VizGrimoireR</dd>
+</dl>
+<p>Example of how to produce a dashboard for all repositories owned by
+organization MetricsGrimoire:</p>
+<dl class="docutils">
+<dt>vg-github.py &#8211;user jgb &#8211;passwd XXX &#8211;dir ~/dashboard &#8211;removedb</dt>
+<dd>&#8211;ghuser ghuser &#8211;ghpasswd XXX MetricsGrimoire VizGrimoire</dd>
+</dl>
+<dl class="class">
+<dt id="build_dashboard.DBConf">
+<em class="property">class </em><tt class="descclassname">build_dashboard.</tt><tt class="descname">DBConf</tt><big>(</big><em>name</em>, <em>host='localhost'</em>, <em>port=None</em>, <em>user=None</em>, <em>passwd=None</em><big>)</big><a class="headerlink" href="#build_dashboard.DBConf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration for a MySQL database.</p>
+<p>Includes information to access the database, such as MySQL user name,
+password for that user, etc.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: string</strong> :</p>
+<blockquote>
+<div><p>Database name (or prefix, in some cases)</p>
+</div></blockquote>
+<p><strong>host: string</strong> :</p>
+<blockquote>
+<div><p>Host name of the machine hosting the database. Default: &#8216;localhost&#8217;</p>
+</div></blockquote>
+<p><strong>port: integer</strong> :</p>
+<blockquote>
+<div><p>Port of the database in host. Default: None, if standard port is used</p>
+</div></blockquote>
+<p><strong>user: string</strong> :</p>
+<blockquote>
+<div><p>MySQL user to access database. Default: None, if no user is needed</p>
+</div></blockquote>
+<p><strong>passwd: string</strong> :</p>
+<blockquote class="last">
+<div><p>Password for user. Default: None, if no password is needed</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="66%" />
+<col width="34%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Same as parameters.</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#build_dashboard.DBConf.connect" title="build_dashboard.DBConf.connect"><tt class="xref py py-obj docutils literal"><span class="pre">connect</span></tt></a>()</td>
+<td>Return a dictionary with parameters needed by MySQLdb.connect().</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="build_dashboard.DBConf.connect">
+<tt class="descname">connect</tt><big>(</big><big>)</big><a class="headerlink" href="#build_dashboard.DBConf.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dictionary with parameters needed by MySQLdb.connect().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>dictionary:</strong> :</p>
+<blockquote class="last">
+<div><p>Values useful for MySQLdb.connect(), omiting those that are None.
+Those are: &#8216;host&#8217;, &#8216;port&#8217;, &#8216;user&#8217;, &#8216;passwd&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="build_dashboard.affiliation">
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">affiliation</tt><big>(</big><em>dbprefix</em><big>)</big><a class="headerlink" href="#build_dashboard.affiliation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run affiliation stuff</p>
+<ul class="simple">
+<li>dbprefix: prefix for the databases</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="build_dashboard.clone_repos">
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">clone_repos</tt><big>(</big><em>dir</em>, <em>repos</em><big>)</big><a class="headerlink" href="#build_dashboard.clone_repos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clone under local directory dir, from the specified git repos.</p>
+<p>Clone locally the repos if corresponding subdirectories don&#8217;t exist,
+or pull from them if they exist.
+For each pkg, a corresponding entry in conf must exist. That entry
+should be a dictionary, with at lease two entries:
+- &#8220;dir&#8221;: the subdirectory name for installation
+- &#8220;repo&#8221;: the url of the git repository</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>dir</strong> : string</p>
+<blockquote>
+<div><p>Path of directory to install git repos as subdirectories</p>
+</div></blockquote>
+<p><strong>repos</strong> : dictionary</p>
+<blockquote>
+<div><p>Git repos to clone. Each entry in the dictionary will correspond
+to a repository: keys are identifiers for repos, that will be
+used as subdir names, values are repo urls.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>None</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="build_dashboard.create_dir">
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">create_dir</tt><big>(</big><em>dir</em><big>)</big><a class="headerlink" href="#build_dashboard.create_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create dir directory, including subdirectories if needed.</p>
+<p>Do nothing if dir directory already exists. Raise exception if
+the path existis, but it is not a directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>dir: string</strong> :</p>
+<blockquote class="last">
+<div><p>Path of directory to create</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="build_dashboard.find_repos">
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">find_repos</tt><big>(</big><em>user</em><big>)</big><a class="headerlink" href="#build_dashboard.find_repos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the repos for a GitHub user or organization.</p>
+<p>Gets a list of the repositories (projects) owned by a GitHub
+user or organization, by querying the GitHub REST API.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>user: string</strong> :</p>
+<blockquote>
+<div><p>GitHub user or organziation</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>tuple of strings</strong> :</p>
+<blockquote class="last">
+<div><p>Repository names.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="build_dashboard.install_pdepend">
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">install_pdepend</tt><big>(</big><em>libdir</em>, <em>libs</em><big>)</big><a class="headerlink" href="#build_dashboard.install_pdepend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Install Python dependencies in a specific location</p>
+<p>Installs Python dependencies, using pip</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>libdir: string</strong> :</p>
+<blockquote>
+<div><p>Path of directory to install Python libraries</p>
+</div></blockquote>
+<p><strong>libs: list of string</strong> :</p>
+<blockquote>
+<div><p>List of names of the libraries to install from pip</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>None</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="build_dashboard.install_rdepend">
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">install_rdepend</tt><big>(</big><em>libdir</em>, <em>vizgrimoirer</em><big>)</big><a class="headerlink" href="#build_dashboard.install_rdepend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Install R dependencies in a specific location</p>
+<p>Installs R dependencies, obtained by reading the DESCRIPTION
+file in the source package for VizGrimoire R.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>libdir: string</strong> :</p>
+<blockquote>
+<div><p>Path of directory to install R libraries</p>
+</div></blockquote>
+<p><strong>vizgrimoirer: string</strong> :</p>
+<blockquote>
+<div><p>Path of directory with the source code for the
+VizGrimoireR R package</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>None</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="build_dashboard.install_vizgrimoirer">
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">install_vizgrimoirer</tt><big>(</big><em>libdir</em>, <em>pkgdir</em><big>)</big><a class="headerlink" href="#build_dashboard.install_vizgrimoirer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Install the appropriate vizgrimore R package in a specific location</p>
+<p>Installs the package to ensure it is properly installed,
+even if it is not available from the standard R librdirs,
+or the version there is not the right one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>libdir: directory to install R libraries</strong> :</p>
+<p><strong>pkgdir: directory with the source code for the</strong> :</p>
+<blockquote>
+<div><p>VizGrimoireR R package</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>None</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="build_dashboard.produce_config">
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">produce_config</tt><big>(</big><em>config_template</em>, <em>config_file</em><big>)</big><a class="headerlink" href="#build_dashboard.produce_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produce a config.json file by translating a template file.</p>
+<ul class="simple">
+<li>config_template: template for config.json (filename)</li>
+<li>config_file: config.json file to be produced (filename)</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="build_dashboard.produce_dashboard">
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">produce_dashboard</tt><big>(</big><em>vizgrimoirejs_dir</em>, <em>example_dir</em>, <em>dashboard_dir</em>, <em>json_dir</em><big>)</big><a class="headerlink" href="#build_dashboard.produce_dashboard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produce an HTML dashboard for the JSON files</p>
+<ul class="simple">
+<li>vizgrimoirejs_dir: dir with the source for VizGrimoireJS</li>
+<li>example_dir: dir with the source specific for the example</li>
+<li>dashboard_dir: dir to copy dashboard files to</li>
+<li>json_dir: dir for json files</li>
+</ul>
+<p>Produce an HTML dashboard for the JSON files generated by the
+analysis scripts.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="build_dashboard.run_analysis">
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">run_analysis</tt><big>(</big><em>scripts</em>, <em>base_dbs</em>, <em>id_dbs</em>, <em>outdir</em><big>)</big><a class="headerlink" href="#build_dashboard.run_analysis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run analysis scripts</p>
+<ul class="simple">
+<li>scripts: scripts to run (list)</li>
+<li>base_dbs: base database for each script (list)</li>
+<li>id_dbs: identities database for each script (list)</li>
+<li>outdir: directory to write output (JSON) files</li>
+</ul>
+<p>The vizgrimoirer R package has to be installed in the R path
+(run install_vizgrimoirer in case of doubt)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="build_dashboard.run_mgtool">
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">run_mgtool</tt><big>(</big><em>tool</em>, <em>project</em>, <em>db_conf</em>, <em>mg_dir</em>, <em>tool_conf</em><big>)</big><a class="headerlink" href="#build_dashboard.run_mgtool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run MetricsGrimoire tool.</p>
+<p>Run a MetricsGrimoire tool to extract data from project, and
+store it in dbname.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>tool: {&#8216;cvsanaly&#8217;, &#8216;bicho&#8217;}</strong> :</p>
+<blockquote>
+<div><p>Tool to run</p>
+</div></blockquote>
+<p><strong>project: string</strong> :</p>
+<blockquote>
+<div><p>GitHub project, such as &#8216;VizGrimoire/VizGrimoireR&#8217;</p>
+</div></blockquote>
+<p><strong>db_conf: DBConf</strong> :</p>
+<blockquote>
+<div><p>Configuration for the database</p>
+</div></blockquote>
+<p><strong>mg_dir: string</strong> :</p>
+<blockquote>
+<div><p>Directory with MegricsGRimoire tools</p>
+</div></blockquote>
+<p><strong>tool_conf: dictionary</strong> :</p>
+<blockquote>
+<div><p>Configuration for the tool to run (see Notes below)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>None</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>The tool_conf dictionary must have at least the following entries:</p>
+<p>&#8220;dir&#8221;: directory (relative to mg_dir) with the installed tool
+&#8220;bin&#8221;: path of binary for the installed tool (relative to &#8220;dir&#8221;)
+&#8220;db&#8221;: tool option to specify the name of the  MySQL database
+&#8220;dbuser&#8221;: tool option to specify the MySQL user to access the database
+&#8220;dbpasswd&#8221;: tool option to specify the passwd for the MySQL user
+&#8220;opts&#8221;: other needed parameters (options) to run the tool
+&#8220;ppath&#8221;: PYTHONPATH path needed to run the tool</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="build_dashboard.run_mgtools">
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">run_mgtools</tt><big>(</big><em>tools</em>, <em>projects</em>, <em>db_conf</em>, <em>db_remove</em><big>)</big><a class="headerlink" href="#build_dashboard.run_mgtools" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run MetricsGrimoire tools</p>
+<p>Run the specified MetricsGrimoire tools for the specified
+GitHub projects, preparing the corresponding databases if needed</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>tools: list of {&#8216;cvsanaly&#8217;, &#8216;bicho&#8217;}</strong> :</p>
+<blockquote>
+<div><p>List of tools to run (usually [&#8216;cvsanaly&#8217;, &#8216;bicho&#8217;]</p>
+</div></blockquote>
+<p><strong>projects: list of strings</strong> :</p>
+<blockquote>
+<div><p>List of GitHub projects, such as VizGrimoire/VizGrimoireR</p>
+</div></blockquote>
+<p><strong>db_conf: DBConf</strong> :</p>
+<blockquote>
+<div><p>Configuration for the database (see Notes below)
+db_conf.name will be used as the prefix for database names</p>
+</div></blockquote>
+<p><strong>db_remove: Boolean</strong> :</p>
+<blockquote>
+<div><p>Whether to remove the databases before preparing it.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>None</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<dl class="docutils">
+<dt>run_mgtools (tools = [&#8216;cvsanaly&#8217;, &#8216;bicho&#8217;],</dt>
+<dd>projects = [&#8216;VizGrimoire/VizGrimoireR&#8217;],
+db_conf = DBConf (name = &#8216;mg&#8217;, user = &#8216;jgb&#8217;, passwd = &#8216;XXX&#8217;)</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="build_dashboard.unique_ids">
+<tt class="descclassname">build_dashboard.</tt><tt class="descname">unique_ids</tt><big>(</big><em>dbprefix</em><big>)</big><a class="headerlink" href="#build_dashboard.unique_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run unique identities stuff</p>
+<ul class="simple">
+<li>dbprefix: prefix for the databases</li>
+</ul>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="modules.html"
+                        title="previous chapter">&lt;no title&gt;</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/build_dashboard.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="&lt;no title&gt;"
+             >previous</a> |</li>
+        <li><a href="index.html">GrimoireLib GitHub Example 1.0 documentation</a> &raquo;</li>
+          <li><a href="modules.html" >&lt;no title&gt;</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Jesus M. Gonzalez Barahona.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
