@@ -49,25 +49,31 @@
             
   <div class="section" id="how-to-produce-documentation-using-sphinx">
 <h1>How to produce documentation using Sphinx<a class="headerlink" href="#how-to-produce-documentation-using-sphinx" title="Permalink to this headline">¶</a></h1>
-<p>If there is no change in the modules:</p>
+<p>If there is no change in the list of modules:</p>
 <ul class="simple">
 <li>Fix sys.path.insert in docs/conf.py, by adding the paths that must be included in PYHTONPATH to import all modules needed by those to be documented.</li>
 <li>Run:</li>
 </ul>
-<p>cd docs
-make html</p>
+<div class="highlight-python"><div class="highlight"><pre>cd docs
+make html
+</pre></div>
+</div>
 <p>This will try to build all HTML content in html directory under BUILDDIR, as defined in docs/Makefile (which should exist). Therefore, change that variable to your taste.</p>
-<p>If there are changes in the modules:</p>
-<p>cd docs
-sphinx-apidoc &#8211;force &#8211;separate -o . ..
-make html</p>
+<p>If there are changes in the list of modules:</p>
+<div class="highlight-python"><div class="highlight"><pre>cd docs
+sphinx-apidoc --force --separate -o . ..
+make html
+</pre></div>
+</div>
 </div>
 <div class="section" id="how-to-push-documentation-to-github">
 <h1>How to push documentation to GitHub<a class="headerlink" href="#how-to-push-documentation-to-github" title="Permalink to this headline">¶</a></h1>
 <p>The directory where the HMTL content was built should be a clone of the gh-pages branch of the project. So, first clone the project, change to the gh-pages branch, and then run the above commands to populate with the new HTML files. After that:</p>
-<p>git add .
-git commit -m &#8220;Updating HTML docs&#8221;
-git push origin gh-pages</p>
+<div class="highlight-python"><div class="highlight"><pre>git add .
+git commit -m &quot;Updating HTML docs&quot;
+git push origin gh-pages
+</pre></div>
+</div>
 </div>
 
 
