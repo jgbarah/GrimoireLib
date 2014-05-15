@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Welcome to GrimoreLib’s documentation! &mdash; GrimoreLib 1.0 documentation</title>
+    <title>How to produce documentation using Sphinx &mdash; GrimoreLib 1.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -23,8 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="GrimoreLib 1.0 documentation" href="#" />
-    <link rel="next" title="&lt;no title&gt;" href="modules.html" /> 
+    <link rel="top" title="GrimoreLib 1.0 documentation" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -39,10 +38,7 @@
         <li class="right" >
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="modules.html" title="&lt;no title&gt;"
-             accesskey="N">next</a> |</li>
-        <li><a href="#">GrimoreLib 1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">GrimoreLib 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -51,41 +47,27 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="welcome-to-grimorelib-s-documentation">
-<h1>Welcome to GrimoreLib&#8217;s documentation!<a class="headerlink" href="#welcome-to-grimorelib-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p>Contents:</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="vizgrimoire.html">vizgrimoire package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="vizgrimoire.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="vizgrimoire.html#module-vizgrimoire">Module contents</a></li>
-</ul>
-</li>
-</ul>
-</div>
-<p>GitHub example:</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="build_dashboard.html">build_dashboard module</a><ul class="simple">
-</ul>
-</li>
-</ul>
-</div>
-<p>How to build HTML documentation for this project</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="howto_doc.html">How to produce documentation using Sphinx</a></li>
-<li class="toctree-l1"><a class="reference internal" href="howto_doc.html#how-to-push-documentation-to-github">How to push documentation to GitHub</a></li>
-</ul>
-</div>
-</div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="how-to-produce-documentation-using-sphinx">
+<h1>How to produce documentation using Sphinx<a class="headerlink" href="#how-to-produce-documentation-using-sphinx" title="Permalink to this headline">¶</a></h1>
+<p>If there is no change in the modules:</p>
 <ul class="simple">
-<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
-<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
-<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+<li>Fix sys.path.insert in docs/conf.py, by adding the paths that must be included in PYHTONPATH to import all modules needed by those to be documented.</li>
+<li>Run:</li>
 </ul>
+<p>cd docs
+make html</p>
+<p>This will try to build all HTML content in html directory under BUILDDIR, as defined in docs/Makefile (which should exist). Therefore, change that variable to your taste.</p>
+<p>If there are changes in the modules:</p>
+<p>cd docs
+sphinx-apidoc &#8211;force &#8211;separate -o . ..
+make html</p>
+</div>
+<div class="section" id="how-to-push-documentation-to-github">
+<h1>How to push documentation to GitHub<a class="headerlink" href="#how-to-push-documentation-to-github" title="Permalink to this headline">¶</a></h1>
+<p>The directory where the HMTL content was built should be a clone of the gh-pages branch of the project. So, first clone the project, change to the gh-pages branch, and then run the above commands to populate with the new HTML files. After that:</p>
+<p>git add .
+git commit -m &#8220;Updating HTML docs&#8221;
+git push origin gh-pages</p>
 </div>
 
 
@@ -94,20 +76,15 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="#">Table Of Contents</a></h3>
+  <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Welcome to GrimoreLib&#8217;s documentation!</a><ul>
-</ul>
-</li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+<li><a class="reference internal" href="#">How to produce documentation using Sphinx</a></li>
+<li><a class="reference internal" href="#how-to-push-documentation-to-github">How to push documentation to GitHub</a></li>
 </ul>
 
-  <h4>Next topic</h4>
-  <p class="topless"><a href="modules.html"
-                        title="next chapter">&lt;no title&gt;</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="_sources/index.txt"
+    <li><a href="_sources/howto_doc.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -139,10 +116,7 @@
         <li class="right" >
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="modules.html" title="&lt;no title&gt;"
-             >next</a> |</li>
-        <li><a href="#">GrimoreLib 1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">GrimoreLib 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
