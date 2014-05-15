@@ -20,6 +20,13 @@ GitHub example:
 
    build_dashboard
 
+How to build HTML documentation for this project
+
+.. toctree::
+   :maxdepth: 2
+
+   howto_doc.rst
+
 Indices and tables
 ==================
 
