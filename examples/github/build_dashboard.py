@@ -509,13 +509,22 @@ def affiliation (dbprefix):
 def run_analysis (scripts, base_dbs, id_dbs, outdir):
     """Run analysis scripts
 
-    - scripts: scripts to run (list)
-    - base_dbs: base database for each script (list)
-    - id_dbs: identities database for each script (list)
-    - outdir: directory to write output (JSON) files
+    Parameters
+    ----------
 
-    The vizgrimoirer R package has to be installed in the R path
-    (run install_vizgrimoirer in case of doubt)
+    scripts: list of string
+        Scripts to run (full path names)
+    base_dbs: list of string
+        Database names for each script
+    id_dbs: list of string
+        Identities database names for each script
+    outdir: string
+        Directory to write output JSON files (full path)
+
+    Returns
+    -------
+
+    None
 
     """
 
@@ -533,6 +542,7 @@ def run_analysis (scripts, base_dbs, id_dbs, outdir):
                      "--dbuser", args.user, "--dbpassword", args.passwd,
                      "-i", id_db,
                      "--granularity", "weeks",
+                     "--reports", "people,repositories",
                      "--destination", outdir]
         if args.verbose:
             print "Running: " + " ".join (call_list)
@@ -588,7 +598,7 @@ def produce_dashboard (vizgrimoirejs_dir, example_dir,
                  "bootstrap/css/bootstrap-responsive.min.css",
                  "browser/favicon.ico"]
     # Files specific to this GitHub example:
-    ghBrowserfiles = ["index.html",
+    ghBrowserfiles = ["index.html", "people.html",
                       "navbar.html", "footer.html", "refcard.html",
                       "project-card.html",
                       "viz_cfg.json", "custom.css"]
@@ -696,8 +706,8 @@ from their git repos, and their R and main Python dependencies.
                   "libs": ["rpy2"]}
     # Configure GrimoireLib paths
     glConf = {"libdir": os.path.join(gl_dir, "vizgrimoire"),
-              "scm-analysis": os.path.join(my_dir, "scm-analysis.py"),
-              "its-analysis": os.path.join(my_dir, "its-analysis.py"),
+              "scm_analysis": os.path.join(my_dir, "scm_analysis.py"),
+              "its_analysis": os.path.join(my_dir, "its_analysis.py"),
               }
     # Configuration for other vizGrimoire packages
     vgConf = {"pkgs": ["vizGrimoireUtils", "vizGrimoireJS"],
@@ -796,7 +806,7 @@ from their git repos, and their R and main Python dependencies.
 
 
     if not args.noanalysis:
-        run_analysis ([glConf["scm-analysis"], glConf["its-analysis"]],
+        run_analysis ([glConf["scm_analysis"], glConf["its_analysis"]],
                       [dbPrefix + "_" + "cvsanaly", dbPrefix + "_" + "bicho"],
                       [dbPrefix + "_" + "cvsanaly", dbPrefix + "_" + "cvsanaly"],
                       JSONdir)
