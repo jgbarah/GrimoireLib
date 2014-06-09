@@ -38,6 +38,8 @@ import report
 
 class ITS(DataSource):
     _metrics_set = []
+    debug = False
+
 
     @staticmethod
     def get_db_name():
@@ -399,6 +401,22 @@ class ITS(DataSource):
         from query_builder import ITSQuery
         return ITSQuery
 
+    @staticmethod
+    def get_metrics_core_agg():
+        m = ['closed','closers','changed','changers',"opened",'openers','trackers']
+        m += ['allhistory_participants']
+        return m
+
+    @staticmethod
+    def get_metrics_core_ts():
+        m = ['closed','closers','changed','changers',"opened",'openers','trackers']
+        return m
+
+    @staticmethod
+    def get_metrics_core_trends():
+        return ['closed','closers','changed','changers',"opened",'openers']
+
+
 ##############
 # Specific FROM and WHERE clauses per type of report
 ##############
@@ -527,47 +545,10 @@ def GetITSSQLReportWhere (type_analysis, identities_db = None):
 ##########
 
 def GetITSInfo (period, startdate, enddate, identities_db, type_analysis, closed_condition, evolutionary):
-    # Meta function to aggregate all of the evolutionary or
-    # aggregated functions
-
-    data = {}
-    metrics_on = ['closed','closers','changed','changers',"opened",'openers','trackers']
-    metrics_reports = ['domains','countries','companies']
-    metrics_on_agg = ['allhistory_participants']
-    filter_ = MetricFilters(period, startdate, enddate, type_analysis)
-    all_metrics = ITS.get_metrics_set(ITS)
-
-    if type_analysis is None:
-        from report import Report
-        reports_on = Report.get_config()['r']['reports'].split(",")
-        for r in metrics_reports:
-            if r in reports_on: metrics_on += [r]
-
-    for item in all_metrics:
-        if item.id not in metrics_on and item.id not in metrics_on_agg: continue
-        item.filters = filter_
-        if (evolutionary):
-            if item.id not in metrics_on: continue
-            mvalue = item.get_ts()
-        else:
-            mvalue = item.get_agg()
-        data = dict(data.items() + mvalue.items())
-
-    if not evolutionary:
-        init_date = ITS.get_date_init(startdate, enddate, identities_db, type_analysis)
-        end_date = ITS.get_date_end(startdate, enddate, identities_db, type_analysis)
-        data = dict(data.items() + init_date.items() + end_date.items())
-
-        # Tendencies
-        metrics_trends = ['closed','closers','opened','openers','changed','changers']
-
-        for i in [7,30,365]:
-            for item in all_metrics:
-                if item.id not in metrics_trends: continue
-                period_data = item.get_agg_diff_days(enddate, i)
-                data = dict(data.items() +  period_data.items())
-
-    return(data)
+    filter_ = None
+    if type_analysis is not None:
+        filter_ = Filter(type_analysis[0],type_analysis[1])
+    return DataSource.get_metrics_data(ITS, period, startdate, enddate, identities_db, filter_, evolutionary)
 
 def EvolITSInfo (period, startdate, enddate, identities_db, type_analysis, closed_condition):
     #Evolutionary info all merged in a dataframe
@@ -749,6 +730,10 @@ def GetReposNameITS (startdate, enddate) :
 def get_projects_name (startdate, enddate, identities_db, closed_condition) :
     # Projects activity needs to include subprojects also
     logging.info ("Getting projects list for ITS")
+
+    # debug
+    if ITS.debug:
+        return {"name":['eclipse']}
 
     # Get all projects list
     q = "SELECT p.id AS name FROM  %s.projects p" % (identities_db)
