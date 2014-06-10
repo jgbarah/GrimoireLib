@@ -20,6 +20,7 @@
 ##
 ## Authors:
 ##   Daniel Izquierdo-Cortazar <dizquierdo@bitergia.com>
+##   Alvaro del Castillo  <acs@bitergia.com>
 ##
 
 
@@ -50,6 +51,17 @@ class Commits(Metrics):
     data_source = SCM
 
     def __get_sql__(self, evolutionary):
+        q_actions = " AND s.id IN (select distinct(a.commit_id) from actions a)"
+
+        fields = " count(distinct(s.id)) as commits "
+        tables = " scmlog s " + self.db.GetSQLReportFrom(self.filters.type_analysis)
+        filters = self.db.GetSQLReportWhere(self.filters.type_analysis, "author") + q_actions
+        query = self.db.BuildQuery(self.filters.period, self.filters.startdate,
+                                   self.filters.enddate, " s.date ", fields,
+                                   tables, filters, evolutionary)
+        return query
+
+    def __get_sql__slow(self, evolutionary):
         fields = " count(distinct(s.id)) as commits "
         tables = " scmlog s, actions a " + self.db.GetSQLReportFrom(self.filters.type_analysis)
         filters = self.db.GetSQLReportWhere(self.filters.type_analysis, "author") + " and s.id=a.commit_id "
@@ -81,15 +93,15 @@ class Authors(Metrics):
         #specific parts of the query depending on the report needed
         tables += self.db.GetSQLReportFrom(self.filters.type_analysis)
 
+        # Hack to cover SCMQuery probs
         if (self.filters.type_analysis is None or len (self.filters.type_analysis) != 2):
             #Specific case for the basic option where people_upeople table is needed
             #and not taken into account in the initial part of the query
-            tables += ",  "+self.db.identities_db+".people_upeople pup"
+            tables += ",  people_upeople pup"
             filters += " and s.author_id = pup.people_id"
 
         elif (self.filters.type_analysis[0] == "repository" or self.filters.type_analysis[0] == "project"):
-            #Adding people_upeople table
-            tables += ",  "+self.db.identities_db+".people_upeople pup"
+            tables += ",  people_upeople pup"
             filters += " and s.author_id = pup.people_id "
 
         q = self.db.BuildQuery(self.filters.period, self.filters.startdate,
@@ -290,8 +302,8 @@ class CommitsPeriod(Metrics):
         # Basic parts of the query needed when calculating commits per period
 
         fields = " count(distinct(s.id))/timestampdiff("+self.filters.period+",min(s.date),max(s.date)) as avg_commits_"+self.filters.period
-        tables = " scmlog s, actions a "
-        filters = " s.id = a.commit_id "
+        tables = " scmlog s "
+        filters = " s.id IN (SELECT DISTINCT(a.commit_id) from actions a) "
 
         tables += self.db.GetSQLReportFrom(self.filters.type_analysis)
         filters += self.db.GetSQLReportWhere(self.filters.type_analysis, "author")
@@ -527,7 +539,7 @@ class Companies(Metrics):
     desc = "Companies participating in the source code management system"
     data_source = SCM
 
-    def get_ts(self):
+    def __get_sql__(self, evol):
         fields = "count(distinct(upc.company_id)) as companies"
         tables = " scmlog s, people_upeople pup, upeople_companies upc"
         filters = "s.author_id = pup.people_id and "+\
@@ -536,23 +548,8 @@ class Companies(Metrics):
                "s.date < upc.end"
         q = self.db.BuildQuery(self.filters.period, self.filters.startdate,
                                self.filters.enddate, " s.date ", fields, 
-                               tables, filters, True)
-        data = self.db.ExecuteQuery(q)
-        return completePeriodIds(data, self.filters.period,
-                                 self.filters.startdate, self.filters.enddate)
-
-    def get_agg(self):
-        q = "select count(distinct(c.id)) as companies "+\
-            "from companies c, "+\
-            "     upeople_companies upc, "+\
-            "     people_upeople pup, "+\
-            "     scmlog s "+\
-            "where c.id = upc.company_id and "+\
-            "      upc.upeople_id = pup.upeople_id and "+\
-            "      pup.people_id = s.author_id and "+\
-            "      s.date >="+ self.filters.startdate+ " and "+\
-            "      s.date < "+ self.filters.enddate
-        return self.db.ExecuteQuery(q)
+                               tables, filters, evol)
+        return q
 
 class Countries(Metrics):
     """ Countries participating in the source code management system """
@@ -563,27 +560,14 @@ class Countries(Metrics):
     desc = "Countries participating in the source code management system"
     data_source = SCM
 
-    def get_ts(self):
+    def __get_sql__(self, evol):
         fields = "count(distinct(upc.country_id)) as countries"
         tables = "scmlog s, people_upeople pup, upeople_countries upc"
         filters = "s.author_id = pup.people_id and pup.upeople_id = upc.upeople_id"
         q = self.db.BuildQuery(self.filters.period, self.filters.startdate,
                                self.filters.enddate, " s.date ", fields,
-                               tables, filters, True)
-        data = self.db.ExecuteQuery(q)
-        return completePeriodIds(data, self.filters.period,
-                                 self.filters.startdate, self.filters.enddate)
-
-    def get_agg(self):
-        q = "select count(distinct(upc.country_id)) as countries "+\
-            "from upeople_countries upc, "+\
-            "     people_upeople pup, "+\
-            "     scmlog s "+\
-            "where upc.upeople_id = pup.upeople_id and "+\
-            "      pup.people_id = s.author_id and "+\
-            "      s.date >="+ self.filters.startdate+ " and "+\
-            "      s.date < "+ self.filters.enddate
-        return self.db.ExecuteQuery(q)
+                               tables, filters, evol)
+        return q
 
 class Domains(Metrics):
     """ Domains participating in the source code management system """
@@ -594,24 +578,11 @@ class Domains(Metrics):
     desc = "Domains participating in the source code management system"
     data_source = SCM
 
-    def get_ts(self):
+    def __get_sql__(self, evol):
         fields = "COUNT(DISTINCT(upd.domain_id)) AS domains"
         tables = "scmlog s, people_upeople pup, upeople_domains upd"
         filters = "s.author_id = pup.people_id and pup.upeople_id = upd.upeople_id"
         q = self.db.BuildQuery(self.filters.period, self.filters.startdate,
                                self.filters.enddate, " s.date ", fields,
-                               tables, filters, True)
-        data = self.db.ExecuteQuery(q)
-        return completePeriodIds(data, self.filters.period,
-                                 self.filters.startdate, self.filters.enddate)
- 
-    def get_agg(self):
-        q = "SELECT COUNT(DISTINCT(upd.domain_id)) AS domains "+\
-            "FROM upeople_domains upd, "+\
-            "  people_upeople pup, "+\
-            "  scmlog s "+\
-            "WHERE upd.upeople_id = pup.upeople_id AND "+\
-            "  pup.people_id = s.author_id AND "+\
-            "  s.date >="+ self.filters.startdate+ " AND "+\
-            "  s.date < "+ self.filters.enddate
-        return self.db.ExecuteQuery(q)
+                               tables, filters, evol)
+        return q
