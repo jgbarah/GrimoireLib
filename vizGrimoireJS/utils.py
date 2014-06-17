@@ -87,10 +87,18 @@ def read_options():
                       action="store",
                       dest="data_source",
                       help="data source to be generated")
+    parser.add_option("--study",
+                      action="store",
+                      dest="study",
+                      help="study to be generated")
     parser.add_option("--filter",
                       action="store",
                       dest="filter",
                       help="filter to be generated")
+    parser.add_option("--no-filters",
+                      action="store_true",
+                      dest="no_filters",
+                      help="don't generate filters metrics")
     parser.add_option("-m", "--metrics",
                       action="store",
                       dest="metrics_path",

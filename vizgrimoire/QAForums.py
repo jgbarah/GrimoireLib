@@ -25,6 +25,8 @@ import logging
 
 import os
 
+import datetime
+
 from GrimoireSQL import GetSQLGlobal, GetSQLPeriod, ExecuteQuery, BuildQuery
 
 from GrimoireUtils import GetPercentageDiff, GetDates, getPeriod, createJSON, completePeriodIds
@@ -88,7 +90,11 @@ class QAForums(DataSource):
 
     @staticmethod
     def __get_data (period, startdate, enddate, i_db, filter_, evol):
-        return DataSource.get_metrics_data(QAForums, period, startdate, enddate, i_db, filter_, evol)
+        metrics =  DataSource.get_metrics_data(QAForums, period, startdate, enddate, i_db, filter_, evol)
+        if filter_ is not None: studies = {}
+        else:
+            studies =  DataSource.get_studies_data(QAForums, period, startdate, enddate, evol)
+        return dict(metrics.items()+studies.items())
 
     @staticmethod
     def get_top_senders(days, startdate, enddate, identities_db, bots, limit, type_post):
@@ -164,7 +170,35 @@ class QAForums(DataSource):
         top_senders['asenders.last month'] = \
             QAForums.get_top_senders(31, startdate, enddate, identities_db, bots, npeople, "answers")
 
-        return(top_senders)
+	# Top for messages: Using new studies approach. To be refactored.
+	from top_qaforums import TopQAForums
+        from report import Report
+        db_identities= Report.get_config()['generic']['db_identities']
+        dbuser = Report.get_config()['generic']['db_user']
+        dbpass = Report.get_config()['generic']['db_password']
+        dbname = Report.get_config()['generic']['db_qaforums']
+        dbquery = QAForums.get_query_builder()
+        dbcon = dbquery(dbuser, dbpass, dbname, db_identities)
+
+        metric_filters = MetricFilters(None, startdate, enddate, [])
+        top = TopQAForums(dbcon, metric_filters)
+        top_senders['participants.'] = top.result()
+
+        finaldate = enddate.replace("'", "")
+        finaldate = datetime.datetime.strptime(finaldate, "%Y-%m-%d")
+        initdate = finaldate - datetime.timedelta(days=30)
+        startdate = "'" + str(initdate) + "'"
+        enddate = "'" + str(finaldate)+ "'"
+        metric_filters = MetricFilters(None, startdate, enddate, [])
+        top = TopQAForums(dbcon, metric_filters)
+        top_senders['participants.last month'] = top.result()
+      
+        initdate = finaldate - datetime.timedelta(days=365)
+        startdate = "'" + str(initdate) + "'"
+        top = TopQAForums(dbcon, metric_filters)
+        top_senders['participants.last year'] = top.result()
+        
+        return top_senders
 
     @staticmethod
     def create_top_report(startdate, enddate, destdir, npeople, i_db):
@@ -245,12 +279,12 @@ class QAForums(DataSource):
 
     @staticmethod
     def get_metrics_core_agg():
-        return ['qsent','asent','csent','qsenders','asenders','csenders']
+        return ['qsent','asent','csent','qsenders','asenders','csenders','participants']
 
     @staticmethod
     def get_metrics_core_ts():
-        return ['qsent','asent','csent','qsenders','asenders','csenders']
+        return ['qsent','asent','csent','qsenders','asenders','csenders','participants']
 
     @staticmethod
     def get_metrics_core_trends():
-        return ['qsent','asent','csent','qsenders','asenders','csenders']
+        return ['qsent','asent','csent','qsenders','asenders','csenders','participants']

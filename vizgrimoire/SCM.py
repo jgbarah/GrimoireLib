@@ -34,7 +34,6 @@ from data_source import DataSource
 from filter import Filter
 from metrics_filter import MetricFilters
 from query_builder import DSQuery
-from onion_model import CommunityStructure
 
 class SCM(DataSource):
     _metrics_set = []
@@ -70,14 +69,11 @@ class SCM(DataSource):
 
     @staticmethod
     def get_evolutionary_data (period, startdate, enddate, identities_db, filter_ = None):
+        type_analysis = None
         if filter_ is not None:
             type_analysis = [filter_.get_name(), "'"+filter_.get_item()+"'"]
-            evol_data = GetSCMEvolutionaryData(period, startdate, enddate, 
-                                               identities_db, type_analysis)
-
-        else:
-            data = GetSCMEvolutionaryData(period, startdate, enddate, identities_db, None)
-            evol_data = completePeriodIds(data, period, startdate, enddate)
+        evol_data = GetSCMEvolutionaryData(period, startdate, enddate, 
+                                           identities_db, type_analysis)
 
         return evol_data
 
@@ -96,21 +92,6 @@ class SCM(DataSource):
 
             static_url = SCM.get_url()
             agg = dict(agg.items() + static_url.items())
-
-            # Init analysis section
-            # print "Analysis section"
-            from report import Report
-            db_identities= Report.get_config()['generic']['db_identities']
-            dbuser = Report.get_config()['generic']['db_user']
-            dbpass = Report.get_config()['generic']['db_password']
-            dbname = Report.get_config()['generic']['db_cvsanaly']
-            dbcon = DSQuery(dbuser, dbpass, dbname, db_identities)
-            metric_filters = MetricFilters(period, startdate, enddate, [])
-            onion = CommunityStructure(dbcon, metric_filters)
-            data = onion.result()
-            # print data
-            #data = GetCodeCommunityStructure(period, startdate, enddate, identities_db)
-            agg = dict(agg.items() + data.items())
         else:
             type_analysis = [filter_.get_name(), "'"+filter_.get_item()+"'"]
 
@@ -375,13 +356,21 @@ def GetSCMEvolutionaryData (period, startdate, enddate, i_db, type_analysis):
     filter_ = None
     if type_analysis is not None:
         filter_ = Filter(type_analysis[0],type_analysis[1])
-    return DataSource.get_metrics_data(SCM, period, startdate, enddate, i_db, filter_, True)
+    metrics = DataSource.get_metrics_data(SCM, period, startdate, enddate, i_db, filter_, True)
+    if filter_ is not None: studies = {}
+    else:
+        studies = DataSource.get_studies_data(SCM, period, startdate, enddate, True)
+    return dict(metrics.items()+studies.items())
 
 def GetSCMStaticData (period, startdate, enddate, i_db, type_analysis):
     filter_ = None
     if type_analysis is not None:
         filter_ = Filter(type_analysis[0],type_analysis[1])
-    return DataSource.get_metrics_data(SCM, period, startdate, enddate, i_db, filter_, False)
+    metrics = DataSource.get_metrics_data(SCM, period, startdate, enddate, i_db, filter_, False)
+    if filter_ is not None: studies = {}
+    else:
+        studies = DataSource.get_studies_data(SCM, period, startdate, enddate, False)
+    return dict(metrics.items()+studies.items())
 
 ##########
 # Specific FROM and WHERE clauses per type of report

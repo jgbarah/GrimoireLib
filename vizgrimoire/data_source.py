@@ -130,6 +130,18 @@ class DataSource(object):
         raise NotImplementedError
 
     @staticmethod
+    def get_filter_bots(filter_):
+        from report import Report
+        bots = []
+
+        if filter_.get_name_plural()+'_out' in Report.get_config()['r']:
+            fbots = Report.get_config()['r'][filter_.get_name_plural()+'_out']
+            bots = fbots.split(",")
+            logging.info("BOTS for " + filter_.get_name_plural())
+            logging.info(bots)
+        return bots
+
+    @staticmethod
     def get_filter_summary(filter_, period, startdate, enddate, identities_db, limit):
         """Get items with a summary for the data source available for the filter"""
         raise NotImplementedError
@@ -238,6 +250,45 @@ class DataSource(object):
         return metrics
 
     @staticmethod
+    def get_studies_data(ds, period, startdate, enddate, evol):
+        """ Get data from studies to be included in agg and evol global JSONs  """
+        from report import Report
+        data = {}
+
+        db_identities = Report.get_config()['generic']['db_identities']
+        dbuser = Report.get_config()['generic']['db_user']
+        dbpass = Report.get_config()['generic']['db_password']
+
+        studies = Report.get_studies()
+
+        if ds.get_name()+"_start_date" in Report.get_config()['r']:
+            startdate = "'"+Report.get_config()['r'][ds.get_name()+"_start_date"]+"'"
+        if ds.get_name()+"_end_date" in Report.get_config()['r']:
+            enddate = "'"+Report.get_config()['r'][ds.get_name()+"_end_date"]+"'"
+        metric_filters = MetricFilters(period, startdate, enddate, [])
+
+        ds_dbname = ds.get_db_name()
+        dbname = Report.get_config()['generic'][ds_dbname]
+        dsquery = ds.get_query_builder()
+        dbcon = dsquery(dbuser, dbpass, dbname, db_identities)
+        evol_txt = "evol"
+        if not evol: evol_txt = "agg"
+        logging.info("Creating studies for " + ds.get_name() + " " + evol_txt)
+        for study in studies:
+            try:
+                obj = study(dbcon, metric_filters)
+                if evol:
+                    res = obj.get_ts(ds)
+                else:
+                    res = obj.get_agg(ds)
+                data = dict(res.items() + data.items())
+            except TypeError:
+                # logging.info(study.id + " does no support standard API. Not used.")
+                pass
+
+        return data
+
+    @staticmethod
     def get_metrics_data(DS, period, startdate, enddate, identities_db, filter_ = None, evol = False):
         """ Get basic data from all core metrics """
         data = {}
@@ -259,6 +310,10 @@ class DataSource(object):
         if filter_ is not None:
             type_analysis = [filter_.get_name(), filter_.get_item()]
 
+        if DS.get_name()+"_startdate" in Report.get_config()['r']:
+            startdate = Report.get_config()['r'][DS.get_name()+"_startdate"]
+        if DS.get_name()+"_enddate" in Report.get_config()['r']:
+            enddate = Report.get_config()['r'][DS.get_name()+"_enddate"]
         mfilter = MetricFilters(period, startdate, enddate, type_analysis)
         metrics_reports = DS.get_metrics_core_reports()
         all_metrics = DS.get_metrics_set(DS)

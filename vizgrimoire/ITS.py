@@ -548,7 +548,11 @@ def GetITSInfo (period, startdate, enddate, identities_db, type_analysis, closed
     filter_ = None
     if type_analysis is not None:
         filter_ = Filter(type_analysis[0],type_analysis[1])
-    return DataSource.get_metrics_data(ITS, period, startdate, enddate, identities_db, filter_, evolutionary)
+    metrics = DataSource.get_metrics_data(ITS, period, startdate, enddate, identities_db, filter_, evolutionary)
+    if filter_ is not None: studies = {}
+    else:
+        studies = DataSource.get_studies_data(ITS, period, startdate, enddate, evolutionary)
+    return dict(metrics.items()+studies.items())
 
 def EvolITSInfo (period, startdate, enddate, identities_db, type_analysis, closed_condition):
     #Evolutionary info all merged in a dataframe
@@ -1252,10 +1256,11 @@ class Backend(object):
             self.closed_condition = "field='closed'"
 
         if (its_type == 'jira'):
-            self.closed_condition = "new_value='CLOSED'"
+            self.closed_condition = "(new_value='Closed')"
             self.reopened_condition = "new_value='Reopened'"
             #self.new_condition = "status='Open'"
             #self.reopened_condition = "status='Reopened'"
+            self.statuses = ["Open", "In Progress", "Ready To Review", "Reviewable", "Closed", "Resolved", "Reopened"]
             self.open_status = 'Open'
             self.reopened_status = 'Reopened'
             self.name_log_table = 'issues_log_jira'
