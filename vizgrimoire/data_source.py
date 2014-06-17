@@ -303,7 +303,7 @@ class DataSource(object):
             metrics_on = DS.get_metrics_core_agg()
             automator_metrics = DS.get_name()+"_metrics_agg"
 
-        if automator_metrics in automator['r']:
+        if automator and automator_metrics in automator['r']:
             metrics_on = automator['r'][automator_metrics].split(",")
 
         type_analysis = None

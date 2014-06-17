@@ -534,6 +534,7 @@ def run_analysis (scripts, base_dbs, id_dbs, outdir):
     env = os.environ.copy()
     env["R_LIBS"] = rConf["libdir"] + ":" + os.environ.get("R_LIBS", "")
     env["PYTHONPATH"] = glConf["libdir"] + ":" + \
+        glConf["moddir"] + ":" + \
         pythonConf["libdir"] + ":" + \
         os.environ.get("PYTHONPATH", "")
     env["LANG"] = ""
@@ -706,7 +707,9 @@ from their git repos, and their R and main Python dependencies.
                   "libs": ["rpy2"]}
     # Configure GrimoireLib paths
     glConf = {"libdir": os.path.join(gl_dir, "vizgrimoire"),
-              "scm_analysis": os.path.join(my_dir, "scm_analysis.py"),
+              "moddir": os.path.join(gl_dir, "vizgrimoire", "analysis") + \
+                  ":" + os.path.join(gl_dir, "vizgrimoire", "metrics"),
+              "scm_analysis": os.path.join(my_dir, "github_analysis.py"),
               "its_analysis": os.path.join(my_dir, "its_analysis.py"),
               }
     # Configuration for other vizGrimoire packages
