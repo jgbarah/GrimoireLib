@@ -29,15 +29,21 @@ from demography import ActivityPersons, DurationPersons, \
     SnapshotCondition, ActiveCondition
 from datetime import datetime, timedelta
 
-class Demography(Analyses):
-
-    id = "demography"
-    name = "Demography"
-    desc = "Age of developers in project"
+class Ages(Analyses):
 
     def __get_sql__(self):
    
         raise NotImplementedError
+
+    def result(self, data_source = None):
+
+        raise NotImplementedError
+
+class AgesSCM(Ages):
+
+    id = "ages_scm"
+    name = "Ages SCM"
+    desc = "Age of developers in SCM repositories"
 
 
     def result(self, data_source = None):
@@ -89,18 +95,18 @@ if __name__ == '__main__':
     dbcon = DSQuery(user = "jgb", password = "XXX", 
                     database = "openstack_cvsanaly_2014-06-06",
                     identities_db = "openstack_cvsanaly_2014-06-06")
-    dem = Demography(dbcon, filters)
+    ages = AgesSCM(dbcon, filters)
 
     # Produce pretty JSON output
     set_encoder_options('json', sort_keys=True, indent=4,
                         separators=(',', ': '),
                         ensure_ascii=False,
                         encoding="utf8")
-    print encode(dem.result(), unpicklable=False)
+    print encode(ages.result(), unpicklable=False)
 
     # Produce compact JSON output
     set_encoder_options('json', separators=(',', ': '),
                         ensure_ascii=False,
                         encoding="utf8")
-    print encode(dem.result(), unpicklable=False)
+    print encode(ages.result(), unpicklable=False)
 
