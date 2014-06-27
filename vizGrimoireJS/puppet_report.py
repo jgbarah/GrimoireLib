@@ -155,7 +155,7 @@ def scm_report(dbcon, filters):
 def qaforums_report(dbcon, filters):
     questions = qa.Questions(dbcon, filters)
     createJSON(questions.get_agg(), "./release/qaforums_questions.json")
-    print(questions.agg())
+    print(questions.get_agg())
 
     answers = qa.Answers(dbcon, filters)
     createJSON(answers.get_agg(), "./release/qaforums_answers.json")
@@ -278,13 +278,16 @@ if __name__ == '__main__':
         filters = MetricFilters("month", startdate, enddate, []) 
         scm_dbcon = SCMQuery(opts.dbuser, opts.dbpassword, opts.dbcvsanaly, opts.dbidentities)
         #SCM report
+        print("\n* SCM summary")
         scm_report(scm_dbcon, filters)
 
         #QAForums report
+        print("\n* Askbot summary")
         qa_dbcon = QAForumsQuery(opts.dbuser, opts.dbpassword, opts.dbqaforums, opts.dbidentities)
         qaforums_report(qa_dbcon, filters)
 
         #MLS Report
+        print("\n* Mailing list summary")
         mls_dbcon = MLSQuery(opts.dbuser, opts.dbpassword, opts.dbmlstats, opts.dbidentities)
         mls_report(mls_dbcon, filters)
 
