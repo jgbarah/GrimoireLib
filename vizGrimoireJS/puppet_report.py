@@ -146,6 +146,16 @@ def scm_report(dbcon, filters):
     top_repos = repos_name(filters.startdate, filters.enddate)
     createJSON(top_repos, "./release/scm_top_repositories.json")
 
+    from onion_transitions import OnionTransitions
+    ot = OnionTransitions(scm_dbcon, filters)
+    ot_data = ot.result()
+    #= {"up_core":up_core, "up_reg":up_reg, "down_reg":down_reg, "down_occ":down_occ}
+    createCSV(ot_data["up_reg"], "./release/scm_occasional_to_regular.csv")
+    createCSV(ot_data["up_core"], "./release/scm_regular_to_core.csv")
+    createCSV(ot_data["down_occ"], "./release/scm_regular_to_occasional.csv")
+    createCSV(ot_data["down_reg"], "./release/scm_core_to_regular.csv")
+
+
 def qaforums_report(dbcon, filters):
     questions = qa.Questions(dbcon, filters)
     createJSON(questions.get_agg(), "./release/qaforums_questions.json")
