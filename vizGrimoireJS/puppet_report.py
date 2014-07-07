@@ -142,8 +142,7 @@ def scm_report(dbcon, filters):
     createJSON(top_authors, "./release/scm_top_authors.json")
     createCSV(top_authors["authors"], "./release/scm_top_authors.csv",['id'])
 
-    from SCM import repos_name
-    top_repos = repos_name(filters.startdate, filters.enddate)
+    top_repos = scm.Repositories(dbcon, filters).get_list()
     createJSON(top_repos, "./release/scm_top_repositories.json")
 
     from onion_transitions import OnionTransitions
@@ -323,6 +322,7 @@ if __name__ == '__main__':
 
         #QAForums report
         print("\n* Askbot summary")
+        print(opts.dbuser, opts.dbpassword, opts.dbqaforums, opts.dbidentities)
         qa_dbcon = QAForumsQuery(opts.dbuser, opts.dbpassword, opts.dbqaforums, opts.dbidentities)
         qaforums_report(qa_dbcon, filters)
 
