@@ -1,0 +1,7 @@
+grimoirelib_alch.test3 module
+=============================
+
+.. automodule:: grimoirelib_alch.test3
+    :members:
+    :undoc-members:
+    :show-inheritance:

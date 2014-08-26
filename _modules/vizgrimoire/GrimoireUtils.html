@@ -68,12 +68,11 @@
 <span class="c"># along with this program; if not, write to the Free Software</span>
 <span class="c"># Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.</span>
 <span class="c">#</span>
-<span class="c"># This file is a part of the vizGrimoire.R package</span>
 <span class="c">#</span>
 <span class="c"># Authors:</span>
 <span class="c">#     Alvaro del Castillo &lt;acs@bitergia.com&gt;</span>
 
-<span class="c"># Misc utils to be distributed in specific modules</span>
+<span class="c"># Misc utils</span>
 
 <span class="kn">import</span> <span class="nn">calendar</span>
 <span class="kn">from</span> <span class="nn">ConfigParser</span> <span class="kn">import</span> <span class="n">SafeConfigParser</span>
@@ -86,7 +85,7 @@
 <span class="kn">import</span> <span class="nn">rpy2.rinterface</span> <span class="kn">as</span> <span class="nn">rinterface</span>
 <span class="kn">from</span> <span class="nn">rpy2.robjects.vectors</span> <span class="kn">import</span> <span class="n">StrVector</span>
 <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span><span class="nn">sys</span>
-
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">average</span><span class="p">,</span> <span class="n">median</span>
 
 <div class="viewcode-block" id="valRtoPython"><a class="viewcode-back" href="../../vizgrimoire.GrimoireUtils.html#vizgrimoire.GrimoireUtils.valRtoPython">[docs]</a><span class="k">def</span> <span class="nf">valRtoPython</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="n">rinterface</span><span class="o">.</span><span class="n">NA_Character</span><span class="p">:</span> <span class="n">val</span> <span class="o">=</span> <span class="bp">None</span>
@@ -189,6 +188,8 @@
         <span class="n">timestamp</span> <span class="o">=</span> <span class="n">calendar</span><span class="o">.</span><span class="n">timegm</span><span class="p">(</span><span class="n">current</span><span class="o">.</span><span class="n">timetuple</span><span class="p">())</span>
         <span class="n">new_ts_data</span><span class="p">[</span><span class="s">&#39;unixtime&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="n">timestamp</span><span class="p">))</span>
         <span class="n">new_ts_data</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="kn">import</span> <span class="nn">locale</span>
+        <span class="n">locale</span><span class="o">.</span><span class="n">setlocale</span><span class="p">(</span><span class="n">locale</span><span class="o">.</span><span class="n">LC_ALL</span><span class="p">,</span> <span class="s">&quot;en_US.UTF-8&quot;</span><span class="p">)</span>
         <span class="n">new_ts_data</span><span class="p">[</span><span class="s">&#39;date&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="s">&quot;%b %Y&quot;</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">new_ts_data</span>
@@ -296,15 +297,57 @@
 
 </div>
 <div class="viewcode-block" id="removeDecimals"><a class="viewcode-back" href="../../vizgrimoire.GrimoireUtils.html#vizgrimoire.GrimoireUtils.removeDecimals">[docs]</a><span class="k">def</span> <span class="nf">removeDecimals</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Convert Decimal type to float &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">decimal</span> <span class="kn">import</span> <span class="n">Decimal</span>
     <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
             <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">Decimal</span><span class="p">)):</span>
                 <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">list</span><span class="p">)):</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">removeDecimals</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)):</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">removeDecimals</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
     <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
             <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">Decimal</span><span class="p">)):</span>
                 <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">list</span><span class="p">)):</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">removeDecimals</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">data</span>
+</div>
+<div class="viewcode-block" id="roundDecimals"><a class="viewcode-back" href="../../vizgrimoire.GrimoireUtils.html#vizgrimoire.GrimoireUtils.roundDecimals">[docs]</a><span class="k">def</span> <span class="nf">roundDecimals</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Limit the max number of decimals in floats &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">metrics</span> <span class="kn">import</span> <span class="n">Metrics</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">Metrics</span><span class="o">.</span><span class="n">max_decimals</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">list</span><span class="p">)):</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">roundDecimals</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)):</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">roundDecimals</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">Metrics</span><span class="o">.</span><span class="n">max_decimals</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">list</span><span class="p">)):</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">roundDecimals</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">data</span>
+
+</div>
+<div class="viewcode-block" id="convertDatetime"><a class="viewcode-back" href="../../vizgrimoire.GrimoireUtils.html#vizgrimoire.GrimoireUtils.convertDatetime">[docs]</a><span class="k">def</span> <span class="nf">convertDatetime</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">datetime</span><span class="p">)):</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">list</span><span class="p">)):</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">convertDatetime</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)):</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">convertDatetime</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">datetime</span><span class="p">)):</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">data</span>
 
 <span class="c"># Until we use VizPy we will create JSON python files with _py</span></div>
@@ -313,7 +356,9 @@
     <span class="n">filepath_tokens</span> <span class="o">=</span> <span class="n">filepath</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;.json&quot;</span><span class="p">)</span>
     <span class="n">filepath_py</span> <span class="o">=</span> <span class="n">filepath_tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s">&quot;_py.json&quot;</span>
     <span class="n">filepath_r</span> <span class="o">=</span> <span class="n">filepath_tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s">&quot;_r.json&quot;</span>
-    <span class="n">json_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">removeDecimals</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">sort_keys</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">checked_data</span> <span class="o">=</span> <span class="n">convertDatetime</span><span class="p">(</span><span class="n">roundDecimals</span><span class="p">(</span><span class="n">removeDecimals</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span>
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">checked_data</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">json_data</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;NaN&#39;</span><span class="p">,</span><span class="s">&#39;&quot;NA&quot;&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">check</span> <span class="o">==</span> <span class="bp">False</span><span class="p">:</span> <span class="c">#forget about R JSON checking</span>
         <span class="n">jsonfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
@@ -338,12 +383,17 @@
         <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">filepath_py</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="compareJSON"><a class="viewcode-back" href="../../vizgrimoire.GrimoireUtils.html#vizgrimoire.GrimoireUtils.compareJSON">[docs]</a><span class="k">def</span> <span class="nf">compareJSON</span><span class="p">(</span><span class="n">orig_file</span><span class="p">,</span> <span class="n">new_file</span><span class="p">,</span> <span class="n">skip_fields</span> <span class="o">=</span> <span class="p">[]):</span>
-    <span class="n">f1</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">orig_file</span><span class="p">)</span>
-    <span class="n">f2</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">new_file</span><span class="p">)</span>
-    <span class="n">data1</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f1</span><span class="p">)</span>
-    <span class="n">data2</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f2</span><span class="p">)</span>
-    <span class="n">f1</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="n">f2</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">f1</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">orig_file</span><span class="p">)</span>
+        <span class="n">f2</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">new_file</span><span class="p">)</span>
+        <span class="n">data1</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f1</span><span class="p">)</span>
+        <span class="n">data2</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f2</span><span class="p">)</span>
+        <span class="n">f1</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">f2</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">IOError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Fail comparing JSON files:&quot;</span><span class="p">,</span> <span class="n">orig_file</span><span class="p">,</span> <span class="n">new_file</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">e</span>
+
 
     <span class="k">return</span> <span class="n">compare_json_data</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span> <span class="n">data2</span><span class="p">,</span> <span class="n">orig_file</span><span class="p">,</span> <span class="n">new_file</span><span class="p">,</span> <span class="n">skip_fields</span><span class="p">)</span>
 </div>
@@ -357,6 +407,9 @@
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">data2</span><span class="p">):</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;More data in &quot;</span> <span class="o">+</span> <span class="n">orig_file</span> <span class="o">+</span> <span class="s">&quot; than in &quot;</span><span class="o">+</span>
                      <span class="n">new_file</span> <span class="o">+</span><span class="s">&quot;: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data1</span><span class="p">))</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span> <span class="p">(</span><span class="n">data2</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">data1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">data2</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
         <span class="n">check</span> <span class="o">=</span> <span class="bp">False</span>
 
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data1</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
@@ -376,22 +429,35 @@
             <span class="k">if</span> <span class="n">data2</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">warn</span> <span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s">&quot; does not exists in &quot;</span> <span class="o">+</span> <span class="n">new_file</span><span class="p">)</span>
                 <span class="n">check</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="k">continue</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="nb">float</span><span class="p">):</span> <span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">],</span><span class="mi">6</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data2</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="nb">float</span><span class="p">):</span> <span class="n">data2</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">data2</span><span class="p">[</span><span class="n">name</span><span class="p">],</span><span class="mi">6</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data2</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span> 
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">])):</span> 
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data2</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data2</span><span class="p">[</span><span class="n">name</span><span class="p">]):</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Different list size for &quot;</span> <span class="o">+</span> <span class="n">name</span><span class="p">)</span>
+                    <span class="n">check</span> <span class="o">=</span> <span class="bp">False</span>
+                    <span class="k">continue</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">])):</span>
                     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="nb">float</span><span class="p">):</span> <span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">i</span><span class="p">],</span><span class="mi">6</span><span class="p">)</span>
                     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data2</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="nb">float</span><span class="p">):</span> <span class="n">data2</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">data2</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">i</span><span class="p">],</span><span class="mi">6</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">data2</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">i</span><span class="p">]:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">warn</span> <span class="p">(</span><span class="s">&quot;&#39;&quot;</span><span class="o">+</span><span class="n">name</span> <span class="o">+</span> <span class="s">&quot;&#39; different in dicts</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">])</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">data2</span><span class="p">[</span><span class="n">name</span><span class="p">]))</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">warn</span> <span class="p">(</span><span class="s">&quot;At position &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+                        <span class="n">check</span> <span class="o">=</span> <span class="bp">False</span>
+                        <span class="k">break</span>
             <span class="k">elif</span> <span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">!=</span> <span class="n">data2</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="p">(</span><span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">==</span> <span class="s">&quot;NA&quot;</span> <span class="ow">and</span> <span class="n">data2</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span> <span class="k">continue</span>
                 <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">skip_fields</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">warn</span> <span class="p">(</span><span class="s">&quot;&#39;&quot;</span><span class="o">+</span><span class="n">name</span> <span class="o">+</span> <span class="s">&quot;&#39; (skipped) different in dicts</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">])</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">data2</span><span class="p">[</span><span class="n">name</span><span class="p">]))</span> 
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warn</span> <span class="p">(</span><span class="s">&quot;&#39;&quot;</span><span class="o">+</span><span class="n">name</span> <span class="o">+</span> <span class="s">&quot;&#39; (skipped) different in dicts</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span> <span class="c"># str(data1[name]) + &quot;\n&quot; + str(data2[name]))</span>
                     <span class="k">continue</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">warn</span> <span class="p">(</span><span class="s">&quot;&#39;&quot;</span><span class="o">+</span><span class="n">name</span> <span class="o">+</span> <span class="s">&quot;&#39; different in dicts</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">data1</span><span class="p">[</span><span class="n">name</span><span class="p">])</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">data2</span><span class="p">[</span><span class="n">name</span><span class="p">]))</span>
                 <span class="n">check</span> <span class="o">=</span> <span class="bp">False</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">data2</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">data1</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">warn</span> <span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s">&quot; does not exists in &quot;</span> <span class="o">+</span> <span class="n">orig_file</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">check</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Failed check for &quot;</span> <span class="o">+</span> <span class="n">orig_file</span> <span class="o">+</span> <span class="s">&quot; and &quot;</span> <span class="o">+</span> <span class="n">new_file</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">check</span>
 </div>
@@ -453,20 +519,23 @@
         <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">opti</span><span class="p">:</span>
             <span class="n">options</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">o</span><span class="p">]</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">options</span>
-</div>
-<div class="viewcode-block" id="get_subprojects"><a class="viewcode-back" href="../../vizgrimoire.GrimoireUtils.html#vizgrimoire.GrimoireUtils.get_subprojects">[docs]</a><span class="k">def</span> <span class="nf">get_subprojects</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">):</span>
+
+<span class="c"># Old code moved to query_builder. To be removed once it is not needed.</span></div>
+<div class="viewcode-block" id="get_subprojects"><a class="viewcode-back" href="../../vizgrimoire.GrimoireUtils.html#vizgrimoire.GrimoireUtils.get_subprojects">[docs]</a><span class="k">def</span> <span class="nf">get_subprojects</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">identities_db</span><span class="p">,</span> <span class="n">dsquery</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Return all subprojects ids for a project in a string join by comma &quot;&quot;&quot;</span>
 
     <span class="kn">from</span> <span class="nn">GrimoireSQL</span> <span class="kn">import</span> <span class="n">ExecuteQuery</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">ExecuteQuery</span>
+    <span class="k">if</span> <span class="n">dsquery</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">query</span> <span class="o">=</span> <span class="n">dsquery</span><span class="o">.</span><span class="n">ExecuteQuery</span>
 
     <span class="n">q</span> <span class="o">=</span> <span class="s">&quot;SELECT project_id from </span><span class="si">%s</span><span class="s">.projects WHERE id=&#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">identities_db</span><span class="p">,</span> <span class="n">project</span><span class="p">)</span>
-    <span class="n">project_id</span> <span class="o">=</span> <span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">q</span><span class="p">)[</span><span class="s">&#39;project_id&#39;</span><span class="p">]</span>
+    <span class="n">project_id</span> <span class="o">=</span> <span class="n">query</span><span class="p">(</span><span class="n">q</span><span class="p">)[</span><span class="s">&#39;project_id&#39;</span><span class="p">]</span>
 
     <span class="n">q</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
 <span class="s">        SELECT subproject_id from </span><span class="si">%s</span><span class="s">.project_children pc where pc.project_id = &#39;</span><span class="si">%s</span><span class="s">&#39;</span>
 <span class="s">    &quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">identities_db</span><span class="p">,</span> <span class="n">project_id</span><span class="p">)</span>
 
-    <span class="n">subprojects</span> <span class="o">=</span> <span class="n">ExecuteQuery</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+    <span class="n">subprojects</span> <span class="o">=</span> <span class="n">query</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">subprojects</span><span class="p">[</span><span class="s">&#39;subproject_id&#39;</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">subprojects</span><span class="p">[</span><span class="s">&#39;subproject_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">subprojects</span><span class="p">[</span><span class="s">&#39;subproject_id&#39;</span><span class="p">]]</span>
@@ -474,7 +543,92 @@
     <span class="n">project_with_children</span> <span class="o">=</span> <span class="n">subprojects</span><span class="p">[</span><span class="s">&#39;subproject_id&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">project_id</span><span class="p">]</span>
     <span class="n">project_with_children_str</span> <span class="o">=</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">project_with_children</span><span class="p">)</span>
 
-    <span class="k">return</span>  <span class="n">project_with_children_str</span></div>
+    <span class="k">return</span>  <span class="n">project_with_children_str</span>
+</div>
+<div class="viewcode-block" id="completeTops"><a class="viewcode-back" href="../../vizgrimoire.GrimoireUtils.html#vizgrimoire.GrimoireUtils.completeTops">[docs]</a><span class="k">def</span> <span class="nf">completeTops</span><span class="p">(</span><span class="n">tops</span><span class="p">,</span> <span class="n">details</span><span class="p">,</span> <span class="n">backend_name</span><span class="o">=</span><span class="s">&#39;bugzilla&#39;</span><span class="p">):</span>
+    <span class="n">completed_tops</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">tops</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+    <span class="n">completed_tops</span><span class="p">[</span><span class="s">&#39;summary&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">completed_tops</span><span class="p">[</span><span class="s">&#39;url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">issue_id</span> <span class="ow">in</span> <span class="n">tops</span><span class="p">[</span><span class="s">&#39;issue_id&#39;</span><span class="p">]:</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="n">issue_id</span><span class="p">]</span>
+        <span class="n">completed_tops</span><span class="p">[</span><span class="s">&#39;summary&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">completed_tops</span><span class="p">[</span><span class="s">&#39;url&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">buildIssueURL</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">issue_id</span><span class="p">,</span> <span class="n">backend_name</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">completed_tops</span>
+</div>
+<div class="viewcode-block" id="buildIssueURL"><a class="viewcode-back" href="../../vizgrimoire.GrimoireUtils.html#vizgrimoire.GrimoireUtils.buildIssueURL">[docs]</a><span class="k">def</span> <span class="nf">buildIssueURL</span><span class="p">(</span><span class="n">tracker_url</span><span class="p">,</span> <span class="n">issue_id</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s">&#39;bugzilla&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="ow">is</span> <span class="ow">not</span> <span class="s">&#39;bugzilla&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;&quot;</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="n">tracker_url</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;/buglist.cgi&#39;</span><span class="p">)</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">tracker_url</span><span class="p">[:</span><span class="n">offset</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;/show_bug.cgi?id=&#39;</span> <span class="o">+</span> <span class="n">issue_id</span>
+    <span class="k">return</span> <span class="n">url</span>
+
+</div>
+<div class="viewcode-block" id="get_median"><a class="viewcode-back" href="../../vizgrimoire.GrimoireUtils.html#vizgrimoire.GrimoireUtils.get_median">[docs]</a><span class="k">def</span> <span class="nf">get_median</span><span class="p">(</span><span class="n">period_values</span><span class="p">):</span>
+    <span class="c"># No data for this period</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">period_values</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s">&#39;nan&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">period_values</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">period_values</span>
+    <span class="k">return</span> <span class="n">median</span><span class="p">(</span><span class="n">removeDecimals</span><span class="p">(</span><span class="n">period_values</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="get_avg"><a class="viewcode-back" href="../../vizgrimoire.GrimoireUtils.html#vizgrimoire.GrimoireUtils.get_avg">[docs]</a><span class="k">def</span> <span class="nf">get_avg</span><span class="p">(</span><span class="n">period_values</span><span class="p">):</span>
+    <span class="c"># No data for this period</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">period_values</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s">&#39;nan&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">period_values</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">period_values</span>
+    <span class="k">return</span> <span class="n">average</span><span class="p">(</span><span class="n">removeDecimals</span><span class="p">(</span><span class="n">period_values</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="medianAndAvgByPeriod"><a class="viewcode-back" href="../../vizgrimoire.GrimoireUtils.html#vizgrimoire.GrimoireUtils.medianAndAvgByPeriod">[docs]</a><span class="k">def</span> <span class="nf">medianAndAvgByPeriod</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">dates</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">get_period</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">period</span> <span class="o">==</span> <span class="s">&#39;month&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">date</span><span class="o">.</span><span class="n">year</span> <span class="o">*</span> <span class="mi">12</span> <span class="o">+</span> <span class="n">date</span><span class="o">.</span><span class="n">month</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dates</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">values</span><span class="p">:</span> <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">values</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dates</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">):</span> <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">period</span>  <span class="p">:</span> <span class="p">[],</span>
+              <span class="s">&#39;median&#39;</span> <span class="p">:</span> <span class="p">[],</span>
+              <span class="s">&#39;avg&#39;</span>    <span class="p">:</span> <span class="p">[]}</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="n">dates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">current_period</span> <span class="o">=</span> <span class="n">get_period</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
+    <span class="n">period_values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ndates</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dates</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ndates</span><span class="p">):</span>
+        <span class="n">date_period</span> <span class="o">=</span> <span class="n">get_period</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="n">dates</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="c"># Change of period</span>
+        <span class="k">if</span> <span class="n">date_period</span> <span class="o">!=</span> <span class="n">current_period</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">period</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_period</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">[</span><span class="s">&#39;median&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_median</span><span class="p">(</span><span class="n">period_values</span><span class="p">))</span>
+            <span class="n">result</span><span class="p">[</span><span class="s">&#39;avg&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_avg</span><span class="p">(</span><span class="n">period_values</span><span class="p">))</span>
+
+            <span class="n">current_period</span> <span class="o">=</span> <span class="n">date_period</span>
+            <span class="n">period_values</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">period_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="c"># End of the list</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">ndates</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">period</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_period</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">[</span><span class="s">&#39;median&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_median</span><span class="p">(</span><span class="n">period_values</span><span class="p">))</span>
+            <span class="n">result</span><span class="p">[</span><span class="s">&#39;avg&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_avg</span><span class="p">(</span><span class="n">period_values</span><span class="p">))</span>                        <span class="c"># Accumulated values</span>
+    <span class="k">return</span> <span class="n">result</span>
+</div>
+<div class="viewcode-block" id="check_array_values"><a class="viewcode-back" href="../../vizgrimoire.GrimoireUtils.html#vizgrimoire.GrimoireUtils.check_array_values">[docs]</a><span class="k">def</span> <span class="nf">check_array_values</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">item</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span> <span class="n">data</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="n">item</span><span class="p">]]</span>
+    <span class="k">return</span> <span class="n">data</span></div>
 </pre></div>
 
           </div>

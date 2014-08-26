@@ -69,9 +69,6 @@
 <span class="c">## This file is a part of the vizGrimoire R package</span>
 <span class="c">##  (an R library for the MetricsGrimoire and vizGrimoire systems)</span>
 <span class="c">##</span>
-<span class="c">## AuxiliarySCM.R</span>
-<span class="c">##</span>
-<span class="c">## Queries for SCM data analysis</span>
 <span class="c">##</span>
 <span class="c">## Authors:</span>
 <span class="c">##   Alvaro del Castillo &lt;acs@bitergia.com&gt;</span>
@@ -80,9 +77,13 @@
 
 <div class="viewcode-block" id="Filter"><a class="viewcode-back" href="../../vizgrimoire.filter.html#vizgrimoire.filter.Filter">[docs]</a><span class="k">class</span> <span class="nc">Filter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
-    <span class="n">_filters_data</span> <span class="o">=</span> <span class="p">[[</span><span class="s">&quot;repository&quot;</span><span class="p">,</span><span class="s">&quot;rep&quot;</span><span class="p">,</span><span class="s">&quot;repos&quot;</span><span class="p">],[</span><span class="s">&quot;company&quot;</span><span class="p">,</span><span class="s">&quot;com&quot;</span><span class="p">,</span><span class="s">&quot;companies&quot;</span><span class="p">],</span>
-                    <span class="p">[</span><span class="s">&quot;country&quot;</span><span class="p">,</span><span class="s">&quot;cou&quot;</span><span class="p">,</span><span class="s">&quot;countries&quot;</span><span class="p">],[</span><span class="s">&quot;domain&quot;</span><span class="p">,</span><span class="s">&quot;dom&quot;</span><span class="p">,</span><span class="s">&quot;domains&quot;</span><span class="p">],</span>
-                    <span class="p">[</span><span class="s">&quot;project&quot;</span><span class="p">,</span><span class="s">&quot;prj&quot;</span><span class="p">,</span><span class="s">&quot;projects&quot;</span><span class="p">]]</span>
+    <span class="n">_filters_data</span> <span class="o">=</span> <span class="p">[</span>
+                     <span class="p">[</span><span class="s">&quot;repository&quot;</span><span class="p">,</span><span class="s">&quot;rep&quot;</span><span class="p">,</span><span class="s">&quot;repos&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s">&quot;company&quot;</span><span class="p">,</span><span class="s">&quot;com&quot;</span><span class="p">,</span><span class="s">&quot;companies&quot;</span><span class="p">],</span>
+                     <span class="p">[</span><span class="s">&quot;country&quot;</span><span class="p">,</span><span class="s">&quot;cou&quot;</span><span class="p">,</span><span class="s">&quot;countries&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s">&quot;domain&quot;</span><span class="p">,</span><span class="s">&quot;dom&quot;</span><span class="p">,</span><span class="s">&quot;domains&quot;</span><span class="p">],</span>
+                     <span class="p">[</span><span class="s">&quot;project&quot;</span><span class="p">,</span><span class="s">&quot;prj&quot;</span><span class="p">,</span><span class="s">&quot;projects&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s">&quot;tag&quot;</span><span class="p">,</span> <span class="s">&quot;tag&quot;</span><span class="p">,</span> <span class="s">&quot;tags&quot;</span><span class="p">],</span>
+                     <span class="p">[</span><span class="s">&quot;people&quot;</span><span class="p">,</span><span class="s">&quot;people&quot;</span><span class="p">,</span><span class="s">&quot;people&quot;</span><span class="p">],</span>
+                     <span class="p">[</span><span class="s">&quot;people2&quot;</span><span class="p">,</span><span class="s">&quot;people2&quot;</span><span class="p">,</span><span class="s">&quot;people2&quot;</span><span class="p">]</span>
+                    <span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">item</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
@@ -113,6 +114,9 @@
 <div class="viewcode-block" id="Filter.get_filename"><a class="viewcode-back" href="../../vizgrimoire.filter.html#vizgrimoire.filter.Filter.get_filename">[docs]</a>    <span class="k">def</span> <span class="nf">get_filename</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="o">+</span><span class="s">&quot;-&quot;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name_plural</span><span class="p">()</span><span class="o">+</span><span class="s">&quot;.json&quot;</span>
 </div>
+<div class="viewcode-block" id="Filter.get_evolutionary_filename_all"><a class="viewcode-back" href="../../vizgrimoire.filter.html#vizgrimoire.filter.Filter.get_evolutionary_filename_all">[docs]</a>    <span class="k">def</span> <span class="nf">get_evolutionary_filename_all</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="o">+</span><span class="s">&quot;-&quot;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name_short</span><span class="p">()</span><span class="o">+</span><span class="s">&quot;-all-evolutionary.json&quot;</span>
+</div>
 <div class="viewcode-block" id="Filter.get_evolutionary_filename"><a class="viewcode-back" href="../../vizgrimoire.filter.html#vizgrimoire.filter.Filter.get_evolutionary_filename">[docs]</a>    <span class="k">def</span> <span class="nf">get_evolutionary_filename</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds</span><span class="p">):</span>
         <span class="n">name</span>  <span class="o">=</span> <span class="bp">None</span>
 
@@ -124,6 +128,9 @@
             <span class="n">name</span> <span class="o">=</span> <span class="n">item</span><span class="o">+</span><span class="s">&quot;-&quot;</span><span class="o">+</span><span class="n">ds</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="o">+</span><span class="s">&quot;-&quot;</span><span class="o">+</span><span class="n">selfname_short</span><span class="o">+</span><span class="s">&quot;-evolutionary.json&quot;</span>
 
         <span class="k">return</span> <span class="n">name</span>
+</div>
+<div class="viewcode-block" id="Filter.get_static_filename_all"><a class="viewcode-back" href="../../vizgrimoire.filter.html#vizgrimoire.filter.Filter.get_static_filename_all">[docs]</a>    <span class="k">def</span> <span class="nf">get_static_filename_all</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="o">+</span><span class="s">&quot;-&quot;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name_short</span><span class="p">()</span>  <span class="o">+</span><span class="s">&quot;-all-static.json&quot;</span>
 </div>
 <div class="viewcode-block" id="Filter.get_static_filename"><a class="viewcode-back" href="../../vizgrimoire.filter.html#vizgrimoire.filter.Filter.get_static_filename">[docs]</a>    <span class="k">def</span> <span class="nf">get_static_filename</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds</span><span class="p">):</span>
         <span class="n">name</span>  <span class="o">=</span> <span class="bp">None</span>
@@ -172,7 +179,16 @@
                 <span class="n">name</span> <span class="o">+=</span> <span class="s">&quot;sent-companies-summary.json&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;No filename for filter summary </span><span class="si">%s</span><span class="s"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">get_name</span><span class="p">()))</span>
-        <span class="k">return</span> <span class="n">name</span></div></div>
+        <span class="k">return</span> <span class="n">name</span>
+</div>
+<div class="viewcode-block" id="Filter.get_type_analysis"><a class="viewcode-back" href="../../vizgrimoire.filter.html#vizgrimoire.filter.Filter.get_type_analysis">[docs]</a>    <span class="k">def</span> <span class="nf">get_type_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Old format for filtering&quot;&quot;&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_item</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">item</span> <span class="o">=</span>  <span class="s">&quot;&#39;&quot;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">get_item</span><span class="p">()</span><span class="o">+</span><span class="s">&quot;&#39;&quot;</span>
+
+        <span class="n">type_analysis</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="p">,</span> <span class="n">item</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">type_analysis</span></div></div>
 </pre></div>
 
           </div>

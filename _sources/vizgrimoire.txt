@@ -6,7 +6,7 @@ Submodules
 
 .. toctree::
 
-   vizgrimoire.Downloads
+   vizgrimoire.DownloadsDS
    vizgrimoire.GrimoireSQL
    vizgrimoire.GrimoireUtils
    vizgrimoire.IRC
@@ -15,6 +15,7 @@ Submodules
    vizgrimoire.Mediawiki
    vizgrimoire.People
    vizgrimoire.QAForums
+   vizgrimoire.ReleasesDS
    vizgrimoire.SCM
    vizgrimoire.SCR
    vizgrimoire.data_source

@@ -23,7 +23,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="GrimoreLib 1.0 documentation" href="index.html" /> 
+    <link rel="top" title="GrimoreLib 1.0 documentation" href="index.html" />
+    <link rel="prev" title="vizgrimoire.report module" href="vizgrimoire.report.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,6 +39,9 @@
         <li class="right" >
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="vizgrimoire.report.html" title="vizgrimoire.report module"
+             accesskey="P">previous</a> |</li>
         <li><a href="index.html">GrimoreLib 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -68,12 +72,27 @@ make html
 </div>
 <div class="section" id="how-to-push-documentation-to-github">
 <h1>How to push documentation to GitHub<a class="headerlink" href="#how-to-push-documentation-to-github" title="Permalink to this headline">¶</a></h1>
-<p>The directory where the HMTL content was built should be a clone of the gh-pages branch of the project. So, first clone the project, change to the gh-pages branch, and then run the above commands to populate with the new HTML files. After that:</p>
+<p>The directory where the HMTL content was built should be a clone of the gh-pages branch of the project. So, first clone the project, change to the gh-pages branch, and then run the above commands to populate with the new HTML files. Remember that the HTML files will be placed under the html directory of the build dir (as specified in the Makefile), so it makes sense to clone the project as html subdir. Eg, if the build dir is GrimoireLib-docs:</p>
+<div class="highlight-python"><div class="highlight"><pre>mkdir GrimoireLib-docs
+git clone https://github.com/VizGrimoire/GrimoireLib.git GrimoireLib-docs/html
+cd GrimoireLib-docs/html
+git checkout gh-pages
+</pre></div>
+</div>
+<p>Now, run the doc generation commands in the GrimoireLib/docs directory (GrimoireLib is the directory where the GrimoireLib repository is cloned, and the commands are those detailed above).</p>
+<p>After that:</p>
 <div class="highlight-python"><div class="highlight"><pre>git add .
 git commit -m &quot;Updating HTML docs&quot;
 git push origin gh-pages
 </pre></div>
 </div>
+</div>
+<div class="section" id="more-information-about-documenting-with-sphinx">
+<h1>More information about documenting with Sphinx<a class="headerlink" href="#more-information-about-documenting-with-sphinx" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference external" href="http://sphinx-doc.org/rest.html">reStructuredText Primer</a></li>
+<li><a class="reference external" href="http://daler.github.io/sphinxdoc-test/includeme.html">Publishing sphinx-generated docs on github</a></li>
+</ul>
 </div>
 
 
@@ -86,8 +105,12 @@ git push origin gh-pages
   <ul>
 <li><a class="reference internal" href="#">How to produce documentation using Sphinx</a></li>
 <li><a class="reference internal" href="#how-to-push-documentation-to-github">How to push documentation to GitHub</a></li>
+<li><a class="reference internal" href="#more-information-about-documenting-with-sphinx">More information about documenting with Sphinx</a></li>
 </ul>
 
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="vizgrimoire.report.html"
+                        title="previous chapter">vizgrimoire.report module</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/howto_doc.txt"
@@ -122,6 +145,9 @@ git push origin gh-pages
         <li class="right" >
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="vizgrimoire.report.html" title="vizgrimoire.report module"
+             >previous</a> |</li>
         <li><a href="index.html">GrimoreLib 1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>

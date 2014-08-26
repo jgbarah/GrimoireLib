@@ -13,13 +13,6 @@ Contents:
 
    modules
 
-GitHub example:
-
-.. toctree::
-   :maxdepth: 2
-
-   build_dashboard
-
 How to build HTML documentation for this project
 
 .. toctree::

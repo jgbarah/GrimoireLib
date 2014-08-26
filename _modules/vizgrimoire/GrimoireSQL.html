@@ -68,8 +68,6 @@
 <span class="c"># along with this program; if not, write to the Free Software</span>
 <span class="c"># Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.</span>
 <span class="c">#</span>
-<span class="c"># This file is a part of the vizGrimoire.R package</span>
-<span class="c">#</span>
 <span class="c"># Authors:</span>
 <span class="c">#     Alvaro del Castillo &lt;acs@bitergia.com&gt;</span>
 
@@ -82,6 +80,8 @@
 
 <span class="c"># global vars to be moved to specific classes</span>
 <span class="n">cursor</span> <span class="o">=</span> <span class="bp">None</span>
+<span class="c"># one connection per database</span>
+<span class="n">dbpool</span> <span class="o">=</span> <span class="p">{}</span>
 
 <span class="c">##########</span>
 <span class="c">#Generic functions to obtain FROM and WHERE clauses per type of report</span>
@@ -267,11 +267,19 @@
 <div class="viewcode-block" id="SetDBChannel"><a class="viewcode-back" href="../../vizgrimoire.GrimoireSQL.html#vizgrimoire.GrimoireSQL.SetDBChannel">[docs]</a><span class="k">def</span> <span class="nf">SetDBChannel</span> <span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">database</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                   <span class="n">host</span><span class="o">=</span><span class="s">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">3306</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="k">global</span> <span class="n">cursor</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">group</span> <span class="o">==</span> <span class="bp">None</span><span class="p">):</span>
-        <span class="n">db</span> <span class="o">=</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">passwd</span><span class="o">=</span><span class="n">password</span><span class="p">,</span>
-                             <span class="n">db</span><span class="o">=</span><span class="n">database</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">)</span>
+    <span class="k">global</span> <span class="n">dbpool</span>
+
+    <span class="n">db</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">database</span> <span class="ow">in</span> <span class="n">dbpool</span><span class="p">:</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="n">dbpool</span><span class="p">[</span><span class="n">database</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">db</span> <span class="o">=</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">read_default_group</span><span class="o">=</span><span class="n">group</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="n">database</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">group</span> <span class="o">==</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="n">db</span> <span class="o">=</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">passwd</span><span class="o">=</span><span class="n">password</span><span class="p">,</span>
+                                 <span class="n">db</span><span class="o">=</span><span class="n">database</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">db</span> <span class="o">=</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">read_default_group</span><span class="o">=</span><span class="n">group</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="n">database</span><span class="p">)</span>
+        <span class="n">dbpool</span><span class="p">[</span><span class="n">database</span><span class="p">]</span> <span class="o">=</span> <span class="n">db</span>
 
     <span class="n">cursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
     <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;SET NAMES &#39;utf8&#39;&quot;</span><span class="p">)</span>
