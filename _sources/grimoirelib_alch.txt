@@ -17,10 +17,6 @@ Submodules
 .. toctree::
 
    grimoirelib_alch.report_demographics
-   grimoirelib_alch.test
-   grimoirelib_alch.test2
-   grimoirelib_alch.test3
-   grimoirelib_alch.test4
    grimoirelib_alch.test_demography
    grimoirelib_alch.test_var
    grimoirelib_alch.var
