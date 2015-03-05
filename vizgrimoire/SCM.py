@@ -314,7 +314,9 @@ class SCM(DataSource):
 
                 for item in items :
                     filter_item = Filter(filter_name, item)
-                    obj = ages(dbcon, metric_filters)
+                    filters = metric_filters
+                    filters.add_filter (filter_name, item)
+                    obj = ages(dbcon, filters)
                     res = obj.create_report(ds, destdir)
 
     @staticmethod

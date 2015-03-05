@@ -270,6 +270,7 @@ class Ages(Analyses):
             file_aging = destdir + "/" + prefix + "-demographics-aging.json"
         produce_json (file_birth, demos["birth"])
         produce_json (file_aging, demos["aging"])
+        log_message += ", analysis_dict: " + str(self.analysis_dict)
         logging.info(log_message)
 
 
