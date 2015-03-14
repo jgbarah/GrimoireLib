@@ -273,6 +273,7 @@ class TestSCMQuery (unittest.TestCase):
             .all()
         self.assertEqual (res, [(2515L,)])
 
+
     def test_filter_paths (self):
         """Test filter_paths"""
         

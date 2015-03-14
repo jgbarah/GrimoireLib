@@ -397,6 +397,48 @@ class Query (GrimoireQuery):
         return query
 
 
+    def select_people_fields(self, kind, fields = ["id"]):
+        """Adds fields from the people or upeople table to a query.
+
+        Parameters
+        ----------
+        kind: {"people" | "upeople"}
+           Kind of table to select from.
+        fields: list of str
+           List of strings with the names of the fields to select
+           ("id": people.id or upeople.id, "name": people.name or
+           upeople.identifier, "email": people.email).
+           Default: "id".
+
+        """
+
+        query = self
+        if kind == "people":
+            if DB.People not in self.joined:
+                self.joined.append(DB.People)
+            if "id" in fields:
+                query = query.add_columns (label("person_id",
+                                                 DB.People.id))
+            if "name" in fields:
+                query = query.add_columns (label("name",
+                                                 DB.People.name))
+            if "email" in fields:
+                query = query.add_columns (label("email",
+                                                 DB.People.email))
+        elif kind == "upeople":
+            if DB.UPeople not in self.joined:
+                self.joined.append(DB.UPeople)
+            if "id" in fields:
+                query = query.add_columns (label("person_id",
+                                                DB.UPeople.id))
+            if "name" in fields:
+                query = query.add_columns (label("name",
+                                                DB.UPeople.identifier))
+        else:
+            raise Exception ("select_people_fields: Unknown kind %s." \
+                                 % kind)
+        return query
+
     def select_commitsperiod(self):
         """Add to select the period of the selected commits.
 
@@ -523,6 +565,7 @@ class Query (GrimoireQuery):
         query = self.add_columns (label("org_id", DB.Companies.id),
                                   label("org_name", DB.Companies.name))
         return query
+
 
     def filter_nomerges (self):
         """Consider only commits that touch files (no merges)
@@ -679,6 +722,69 @@ class Query (GrimoireQuery):
             query = query.filter(DB.Actions.file_id == DB.FileLinks.file_id)
         query = query.filter(or_(*conditions))
         return query
+
+
+    def filter_people (self, list_in = None, list_out = None,
+                       kind = "people", field = "name"):
+        """Filter from a people or upeople table.
+
+        It assumes people or upeople tables are already joined.
+
+        Parameters
+        ----------
+
+        list_in: list of str
+           List of people to include (only this will be included).
+           Default: None, all are included.
+        list_out: list of str
+           List of people to exclude (these will not be included).
+           Default: None, no one is included.
+        kind: {"people" | "upeople" }
+           Kind of table to use to filter in or out (people table,
+           or upeople table for "unique" identifiers).
+           Default: "people"
+        field: str
+           Name of the fields to use for filtering
+           ("id": people.id or upeople.id, "name": people.name or
+           upeople.identifier, "email": people.email).
+           Default: "name".
+
+        Returns
+        -------
+        
+        Query object.
+
+        """
+
+        if kind == "people":
+            table = DB.People
+        elif kind == "upeople":
+            table = DB.UPeople
+        else:
+            raise Exception ("filter_person_names: Unknown kind %s." % kind)
+        if table not in self.joined:
+            raise Exception ("filter_person_names: " \
+                                 + kind + " table not joined")
+        query = self
+        if field == "id":
+            filter_field = table.id
+        elif field == "name":
+            if table == DB.People:
+                filter_field = DB.People.name
+            else:
+                filter_field = DB.UPeople.identifier
+        elif field == "email":
+            if table == DB.People:
+                filter_field = DB.People.email
+            else:
+                raise Exception ("filter_person_names: " \
+                                     + "no email in upeople table.")
+        if list_in is not None:
+            query = query.filter (filter_field.in_(list_in))
+        if list_out is not None:
+            query = query.filter (~filter_field.in_(list_out))
+        return query
+
 
     def filter_orgs (self, orgs):
         """Filter organizations matching a list of names
