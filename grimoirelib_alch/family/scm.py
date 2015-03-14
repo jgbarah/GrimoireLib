@@ -279,6 +279,60 @@ class OrgsCondition (DBCondition):
                                     kind = self.actors)
 
 
+class PersonsCondition (DBCondition):
+    """Persons Condition for qualifying an entity.
+
+    Specifies the persons to filter in or out: only their activity will
+    be considered.
+    """
+
+    def __init__ (self, list_in = None, list_out = None,
+                  actors = "authors"):
+        """Instatiation of the object.
+
+        Parameters
+        ----------
+
+        list_in: list of str
+           List of people to include (only this will be included).
+           Default: None, all are included.
+        list_out: list of str
+           List of people to exclude (these will not be included).
+           Default: None, no one is included.
+        actors: {"authors", "committers"}
+            Kind of actors to consider
+
+        """
+
+        self.list_in = list_in
+        self.list_out = list_out
+        self.actors = actors
+
+    def filter (self, query):
+        """Filter to apply for this condition
+
+        Parameters
+        ----------
+
+        query: Query
+           Query to which the filter will be applied
+
+        """
+
+        # Get the session for this query, use it for getting people ids,
+        # and build the filter
+        session = inspect(query).session
+        query_people = session.query() \
+            .select_people_fields(kind = "people",
+                                  fields = ["id",]) \
+            .filter_people (list_in = self.list_in,
+                            list_out = self.list_out,
+                            kind = "people", field = "name")
+        list_people = query_people.all()
+        return query.filter_persons(list = self.list_people,
+                                    kind = self.actors)
+
+
 if __name__ == "__main__":
 
     from grimoirelib_alch.aux.standalone import stdout_utf8, print_banner

@@ -655,6 +655,7 @@ class Query (GrimoireQuery):
             raise Exception ("filter_persons: Unknown kind %s." \
                              % kind)
 
+
     def filterout_persons (self, list, kind = "all"):
         """Filter out a list of people ids (committers, authors)
 
@@ -687,6 +688,56 @@ class Query (GrimoireQuery):
         else:
             raise Exception ("filterout_persons: Unknown kind %s." \
                              % kind)
+
+
+    def filter_persons_id (self, list_in = None, list_out = None,
+                           kind = "all"):
+        """Fiter for a certain list of persons (committers, authors).
+
+        Parameters
+        ----------
+
+        list_in: list of str
+           List of people ids to include (only this will be included).
+           Default: None, all are included.
+        list_out: list of str
+           List of people ids to exclude (these will not be included).
+           Default: None, no one is included.
+        kind: {'committers' | 'authors' | 'all'}
+           kind of person to select (all: authors and committers)
+
+        Returns
+        -------
+        
+        Query object.
+
+        """
+
+        query = self
+        if kind not in ("authors", "committers", "all"):
+            raise Exception ("filter_persons: Unknown kind %s." \
+                                 % kind)
+        if list_in is not None:
+            if kind == "authors":
+                query = query.filter (DB.SCMLog.author_id.in_(list_in))    
+            elif kind == "committers":
+                query =  query.filter (DB.SCMLog.committer_id.in_(list_in))
+            elif kind == "all":
+                query = query.filter (
+                    or_(DB.SCMLog.author_id.in_(list_in),
+                        DB.SCMLog.committer_id.in_(list_in))
+                    )
+        if list_out is not None:
+            if kind == "authors":
+                query = query.filter (~DB.SCMLog.author_id.in_(list_out))
+            elif kind == "committers":
+                query = query.filter (~DB.SCMLog.committer_id.in_(list_out))
+            elif kind == "all":
+                query = query.filter (
+                    and_(~DB.SCMLog.author_id.in_(list_out),
+                        ~DB.SCMLog.committer_id.in_(list_out))
+                    )
+        return query
 
 
     def filter_paths (self, list):
