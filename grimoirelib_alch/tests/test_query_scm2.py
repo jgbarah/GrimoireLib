@@ -113,6 +113,32 @@ class TestSCMQuery (unittest.TestCase):
         query = query.filter_period(start=start, end=end)
         self.assertEqual (query.scalar(), correct[4])
 
+    def test_filter_persons_uid (self):
+        """Test filter_persons_id with unique ids (UPeople)"""
+        
+        correct = [1311, 43, 26, 25, 19]
+
+        query = self.session.query() \
+            .select_nscmlog(["commits",])
+        self.assertEqual (query.scalar(), correct[0])
+        query = query \
+            .filter_persons_id (list_in = [1, 12, 14, 15],
+                                kind = "uauthors")
+        self.assertEqual (query.scalar(), correct[1])
+        query = query \
+            .filter_persons_id (list_out = [1, 14,], kind = "uauthors")
+        self.assertEqual (query.scalar(), correct[2])
+        query = self.session.query() \
+            .select_nscmlog(["commits",]) \
+            .filter_persons_id (list_in = [1, 12, 14, 15],
+                                list_out = [1, 14],
+                                kind = "uauthors")
+        self.assertEqual (query.scalar(), correct[2])
+        query = query.filter_nomerges()
+        self.assertEqual (query.scalar(), correct[3])
+        query = query.filter_period(start=start, end=end)
+        self.assertEqual (query.scalar(), correct[4])
+
 
 if __name__ == "__main__":
     unittest.main()

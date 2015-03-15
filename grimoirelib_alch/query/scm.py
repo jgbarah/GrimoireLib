@@ -714,11 +714,28 @@ class Query (GrimoireQuery):
         """
 
         query = self
-        if kind not in ("authors", "committers", "all"):
+        if kind not in ("authors", "uauthors",
+                        "committers", "all"):
             raise Exception ("filter_persons: Unknown kind %s." \
                                  % kind)
+        if kind in ("uauthors", "ucommitters"):
+            if kind == "uauthors":
+                person = DB.SCMLog.author_id
+            elif kind == "ucommitters":
+                person = DB.SCMLog.committer_id
+            # Join PeopleUPeople if not joined, using the proper field(s)
+            if DB.PeopleUPeople not in self.joined:
+                self.joined.append(DB.PeopleUPeople)
+                query = query.join (
+                    DB.PeopleUPeople,
+                    person == DB.PeopleUPeople.people_id
+                    )
         if list_in is not None:
-            if kind == "authors":
+            if kind in ("uauthors", "ucommitters"):
+                query = query.filter (
+                    DB.PeopleUPeople.upeople_id.in_(list_in)
+                    )
+            elif kind == "authors":
                 query = query.filter (DB.SCMLog.author_id.in_(list_in))    
             elif kind == "committers":
                 query =  query.filter (DB.SCMLog.committer_id.in_(list_in))
@@ -728,7 +745,11 @@ class Query (GrimoireQuery):
                         DB.SCMLog.committer_id.in_(list_in))
                     )
         if list_out is not None:
-            if kind == "authors":
+            if kind in ("uauthors", "ucommitters"):
+                query = query.filter (
+                    ~DB.PeopleUPeople.upeople_id.in_(list_out)
+                    )
+            elif kind == "authors":
                 query = query.filter (~DB.SCMLog.author_id.in_(list_out))
             elif kind == "committers":
                 query = query.filter (~DB.SCMLog.committer_id.in_(list_out))
@@ -855,6 +876,7 @@ class Query (GrimoireQuery):
         query = query.filter(DB.Companies.name.in_(orgs))
         return query
 
+
     def filter_org_ids (self, list, kind = "authors"):
         """Filter organizations matching a list of organization ids
 
@@ -892,6 +914,7 @@ class Query (GrimoireQuery):
                            )) \
             .filter (DB.UPeopleCompanies.company_id.in_(list))
         return query
+
 
     def group_by_period (self):
         """Group by time period (per month)"""
