@@ -628,6 +628,8 @@ class Query (GrimoireQuery):
     def filter_persons (self, list, kind = "all"):
         """Fiter for a certain list of persons (committers, authors)
 
+        Deprecated: use filter_persons_id instead.
+
         Parameters
         ----------
 
@@ -643,21 +645,13 @@ class Query (GrimoireQuery):
 
         """
 
-        query = self
-        if kind == "authors":
-            return query.filter (DB.SCMLog.author_id.in_(list))    
-        elif kind == "committers":
-            return query.filter (DB.SCMLog.committer_id.in_(list))    
-        elif kind == "all":
-            return query.filter (or_(DB.SCMLog.author_id.in_(list),
-                                     DB.SCMLog.committer_id.in_(list)))
-        else:
-            raise Exception ("filter_persons: Unknown kind %s." \
-                             % kind)
+        return self.filter_persons_id (list_in = list, kind = kind)
 
 
     def filterout_persons (self, list, kind = "all"):
         """Filter out a list of people ids (committers, authors)
+
+        Deprecated: use filter_persons_id instead.
 
         Parameters
         ----------
@@ -677,34 +671,33 @@ class Query (GrimoireQuery):
 
         """
 
-        query = self
-        if kind == "authors":
-            return query.filter (~DB.SCMLog.author_id.in_(list))    
-        elif kind == "committers":
-            return query.filter (~DB.SCMLog.committer_id.in_(list))    
-        elif kind == "all":
-            return query.filter (and_(~DB.SCMLog.author_id.in_(list),
-                                     ~DB.SCMLog.committer_id.in_(list)))
-        else:
-            raise Exception ("filterout_persons: Unknown kind %s." \
-                             % kind)
+        return self.filter_persons_id (list_out = list, kind = kind)
 
 
     def filter_persons_id (self, list_in = None, list_out = None,
                            kind = "all"):
-        """Fiter for a certain list of persons (committers, authors).
+        """Filter for a certain list of persons (committers, authors).
+
+        Both an in and an out filter are allowed. If both are present,
+        the in filter is applied first, and then the out filter
+        is applied on the result of applying the in filter.
 
         Parameters
         ----------
 
-        list_in: list of str
-           List of people ids to include (only this will be included).
+        list_in: list of int
+           List of people or upeople ids to include (only those
+           will be included).
            Default: None, all are included.
-        list_out: list of str
-           List of people ids to exclude (these will not be included).
+        list_out: list of int
+           List of people or upeople ids to exclude (these will
+           not be included).
            Default: None, no one is included.
-        kind: {'committers' | 'authors' | 'all'}
-           kind of person to select (all: authors and committers)
+        kind: { 'committers' | 'ucommitters' |
+             'authors' | | 'uauthors' | 'all' }
+           Kind of person ids to filter: committers, authors and all
+             (authors and committers) are ids from people table;
+             ucommitters and uauthors are ids from upeople table.
 
         Returns
         -------
