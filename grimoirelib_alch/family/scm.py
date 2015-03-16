@@ -299,8 +299,10 @@ class PersonsCondition (DBCondition):
         list_out: list of str
            List of people to exclude (these will not be included).
            Default: None, no one is included.
-        actors: {"authors", "committers"}
-            Kind of actors to consider
+        actors: {"authors", "committers", "uauthors", "ucommitters"}
+            Kind of actors to consider. "authors", "committers" are
+            names in people table; "uauthors", "ucommitters" are
+            identifiers in upeople table.
 
         """
 
@@ -319,18 +321,48 @@ class PersonsCondition (DBCondition):
 
         """
 
+        if self.actors in ("authors", "committers"):
+            kind = "people"
+        elif self.actors in ("uauthors", "ucommitters"):
+            kind = "upeople"
+        else:
+            raise Exception ("PersonsCondition.filter: " + \
+                                 "Unknown actors " + actors + ".")
         # Get the session for this query, use it for getting people ids,
         # and build the filter
         session = inspect(query).session
-        query_people = session.query() \
-            .select_people_fields(kind = "people",
-                                  fields = ["id",]) \
-            .filter_people (list_in = self.list_in,
-                            list_out = self.list_out,
-                            kind = "people", field = "name")
-        list_people = query_people.all()
-        return query.filter_persons(list = self.list_people,
-                                    kind = self.actors)
+        query_ids = session.query() \
+            .select_people_fields(kind = kind,
+                                  fields = ["id",])
+        if self.list_in is not None:
+            # We have a list_in. So, compute ids in list_in minus
+            #  (if it exists) those in list_out, as list_in_ids.
+            #  No list for list_out_ids in this case, they are
+            #  "included" in the former.
+            query_in_ids = query_ids.filter_people (
+                list_in = self.list_in,
+                list_out = self.list_out,
+                kind = kind,
+                field = "name")
+            list_in_ids = [row.person_id for row in query_in_ids.all()]
+            list_out_ids = None
+        elif self.list_out is not None:
+            # We have a list_out only. So, compute ids in it as
+            #   list_out_ids. No list for list_in_ids in this case.
+            list_in_ids = None
+            query_out_ids = query_ids.filter_people (
+                list_in = self.list_out,
+                kind = kind,
+                field = "name")
+            list_out_ids = [row.person_id for row in query_out_ids.all()]
+        else:
+            raise Exception ("PersonsCondition.filter: " + \
+                                 "at least one of list_in, list_out " + \
+                                 "should be a list.")
+        query = query.filter_persons_id(list_in = list_in_ids,
+                                        list_out = list_out_ids,
+                                        kind = self.actors)
+        return query
 
 
 if __name__ == "__main__":
