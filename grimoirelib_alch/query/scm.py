@@ -137,13 +137,13 @@ class DB (GrimoireDatabase):
             schemaname = self.schema,
             columns = dict (
                 author_id = Column(Integer,
-                                   ForeignKey(self.schema_id + '.' + 'people.id')
+                                   ForeignKey(self.schema + '.' + 'people.id')
                                    ),
                 committer_id = Column(Integer,
-                                      ForeignKey(self.schema_id + '.' + 'people.id')
+                                      ForeignKey(self.schema + '.' + 'people.id')
                                       ),
                 repository_id = Column(Integer,
-                                       ForeignKey(self.schema_id + '.' + 
+                                       ForeignKey(self.schema + '.' + 
                                                   'repositories.id')
                                        ),
                 ))
