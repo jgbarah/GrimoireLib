@@ -63,7 +63,7 @@ class TopQuestions(object):
                 group by q.question_identifier
                 order by comments desc limit %s
                 """ % (self.filters.startdate, self.filters.enddate, self.filters.npeople)
-        return self.db.ExecuteQuery(query)
+        return self.db.ExecuteQuery(query, enforce = "list")
 
     def top_visited(self):
         # The top visited questions are those questions with the 
